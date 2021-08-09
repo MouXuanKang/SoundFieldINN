@@ -1,17 +1,5 @@
 import numpy as np
 
-if __name__ == "__main__":
-    totnodes = 10020
-    deltax = ([4])
-    deltay = ([4])
-    numfam = []
-    node = []
-    coord = np.array([[1, 2, 2],
-                      [2, 3, 4],
-                      [3, 4, 5]])
-
-
-
 
 def p_operator_2d(xsi1, xsi2, delta_mag):
     xsi1p = xsi1 / delta_mag
@@ -33,13 +21,14 @@ def weights_2d(xsi1, xsi2, delta_mag):
     # wt = 1.0
     # wt = (xsi_mag/delta_mag)^2
 
-    weight = np.array([[wt, wt, wt, wt, wt, wt],
-                       [wt, wt, wt, wt, wt, wt],
-                       [wt, wt, wt, wt, wt, wt],
-                       [wt, wt, wt, wt, wt, wt],
-                       [wt, wt, wt, wt, wt, wt],
-                       [wt, wt, wt, wt, wt, wt]
-                       ])
+    # weight = np.array([[wt, wt, wt, wt, wt, wt],
+    #                    [wt, wt, wt, wt, wt, wt],
+    #                    [wt, wt, wt, wt, wt, wt],
+    #                    [wt, wt, wt, wt, wt, wt],
+    #                    [wt, wt, wt, wt, wt, wt],
+    #                    [wt, wt, wt, wt, wt, wt]
+    #                    ])
+    weight = wt
     return weight
 
 
@@ -54,78 +43,68 @@ def b_operator_2d():
     return b
 
 
-def getSize2D(n1order, n2order):
-    iterm = 0
-    morder = str(n1order) + str(n2order)
-    match morder:
-        case '00':
-            iterm = 1
-        case '01':
-            iterm = 2
-        case '10':
-            iterm = 2
-        case '11':
-            iterm = 3
-        case '20':
-            iterm = 3
-        case '02':
-            iterm = 3
-        case '21':
-            iterm = 4
-        case '12':
-            iterm = 4
-        case '22':
-            iterm = 6
-    nsize = iterm
-    return nsize
-
-
-def FormDiffAmat2D(n1order, n2order, k, dvolume):
+def FormDiffAmat2D(k, dvolume):
     delta_mag = np.sqrt(deltax[k] ^ 2 + deltay[k] ^ 2)
-    Amat = np.array([])
-    morder = str(n1order) + str(n2order)
-    nsize = getSize2D(n1order, n2order)
+    # morder = str(n1order) + str(n2order)
+    # nsize = getSize2D(n1order, n2order)
+    # A00 = []
+    # A01 = []
+    # A10 = []
+    # A11 = []
+    # A02 = []
+    # A20 = []
+    # A22 = []
+    A = np.zeros((6, 6), dtype=float)
     for imem in range(numfam[k]):
         i = node[imem]
         xsi1 = coord[i, 1] - coord[k, 1]  # x
         xsi2 = coord[i, 2] - coord[k, 2]  # y
         p = p_operator_2d(xsi1, xsi2, delta_mag)
         w = weights_2d(xsi1, xsi2, delta_mag)
-        match morder:
-            case '00':
-                Amat[0, 0] += w[0, 0].dot(p[0, 0]) * dvolume[i]
-            case '01':
-                Amat[1:2, 0] += w[1, 0].dot(p[1:2, 0]) * dvolume[i]
-            case '10':
-                Amat[0, 1:2] += w[0, 1].dot(p[0, 1:2]) * dvolume[i]
-            case '11':
-                Amat[1:2, 1:2] += w[1, 1].dot(p[1:2, 1:2]) * dvolume[i]
-            case '02':
-                Amat[0, 3:5] += w[2, 0].dot(p[0, 3:5]) * dvolume[i]
-            case '20':
-                Amat[3:5, 0] += w[0, 2].dot(p[3:5, 0]) * dvolume[i]
-            case '12':
-                Amat[1:2, 3:5] += w[3, 0].dot(p[1:2, 3:5]) * dvolume[i]
-            case '21':
-                Amat[3:5, 1:2] += w[0, 3].dot(p[3:5, 1:2]) * dvolume[i]
-            case '22':
-                Amat[3:5, 3:5] += w[3, 3].dot(p[3:5, 3:5]) * dvolume[i]
-    return Amat
+        A[0, 0] = w * p[0, 0] * dvolume[i] + A[0, 0]
+        A[1:2, 0] = w * p[1:2, 0] * dvolume[i] + A[1:2, 0]
+        A[0, 1:2] = w * p[0, 1:2] * dvolume[i] + A[0, 1:2]
+        A[1:2, 1:2] = w * p[1:2, 1:2] * dvolume[i] + A[1:2, 1:2]
+        A[0, 3:5] = w * p[0, 3:5] * dvolume[i] + A[0, 3:5]
+        A[3:5, 0] = w * p[3:5, 0] * dvolume[i] + A[3:5, 0]
+        A[3:5, 3:5] = w * p[3:5, 3:5] * dvolume[i] + A[3:5, 3:5]
+
+    # A[0] = {'norder': '00', 'Amat': A00}
+    # A[1] = {'norder': '01', 'Amat': A01}
+    # A[2] = {'norder': '10', 'Amat': A10}
+    # A[3] = {'norder': '11', 'Amat': A11}
+    # A[4] = {'norder': '02', 'Amat': A02}
+    # A[5] = {'norder': '20', 'Amat': A20}
+    # A[6] = {'norder': '22', 'Amat': A22}
+    # A[1].get('Amat')
+    return A
 
 
-def FormDiffBvec2D(n1order, n2order, nsize):
-    morder = str(n1order) + str(n2order)
+def FormDiffBvec2D():
+    # morder = str(n1order) + str(n2order)
     matric = b_operator_2d()
     b = []
-    match morder:
-        case '00':
-            b = matric[:, 1]
-            return b
-        case '11':
-            b = matric[:, 2:3]
-            return b
-        case '22':
-            b = matric[:, 4:6]
-            return b
+    # b00 = matric[:, 0]
+    # b11 = matric[:, 1:2]
+    # b22 = matric[:, 3:5]
+    # b[0] = {'norder': '00', 'bmat': b00}
+    # b[1] = {'norder': '11', 'bmat': b11}
+    # b[2] = {'norder': '22', 'bmat': b22}
+    b = matric
+    return b
 
+
+if __name__ == "__main__":
+    totnodes = 3
+    deltax = ([4])
+    deltay = ([4])
+    numfam = []
+    node = []
+    coord = np.array([[1, 2, 2],
+                      [2, 3, 4],
+                      [3, 4, 5]])
+    dvolume = [1e6]
+    Amat = FormDiffAmat2D(1, dvolume)
+    bvec = FormDiffBvec2D()
+    amat = np.linalg.inv(Amat).I * bvec
 
