@@ -1,5 +1,3 @@
-import numpy as np
-
 """
 @Title:
     Solving Helmholtz equation with PDDO-PINNs.
@@ -12,25 +10,26 @@ import numpy as np
 
 Created on 2021
 """
+import numpy as np
 
 
 def p_operator_2d(xsi1, xsi2, delta_mag):
     xsi1p = xsi1 / delta_mag
     xsi2p = xsi2 / delta_mag
-    plist = np.array([[1, xsi1p, xsi2p, xsi1p ^ 2, xsi2p ^ 2, xsi1p * xsi2p],
-                      [xsi1p, xsi1p ^ 2, xsi1p * xsi2p, xsi1p ^ 3, xsi1p * xsi2p ^ 3, xsi1p ^ 2 * xsi2p],
-                      [xsi2p, xsi1p * xsi2p, xsi2p ^ 2, xsi1p ^ 2 * xsi2p, xsi2p ^ 3, xsi1p * xsi2p ^ 2],
-                      [xsi1p ^ 2, xsi1p ^ 3, xsi1p ^ 2 * xsi2p, xsi1p ^ 4, xsi1p ^ 2 * xsi2p ^ 2, xsi1p ^ 3 * xsi2p],
-                      [xsi2p ^ 2, xsi1p * xsi2p ^ 2, xsi2p ^ 3, xsi1p ^ 2 * xsi2p ^ 2, xsi2p ^ 4, xsi1p * xsi2p ^ 3],
-                      [xsi1p * xsi2p, xsi1p ^ 2 * xsi2p, xsi1p * xsi2p ^ 2, xsi1p ^ 3 * xsi2p, xsi1p * xsi2p ^ 3,
-                       xsi1p ^ 2 * xsi2p ^ 2]
+    plist = np.array([[1, xsi1p, xsi2p, xsi1p**2, xsi2p**2, xsi1p * xsi2p],
+                      [xsi1p, xsi1p**2, xsi1p * xsi2p, xsi1p**3, xsi1p * xsi2p**2, xsi1p**2 * xsi2p],
+                      [xsi2p, xsi1p*xsi2p, xsi2p**2, xsi1p**2 * xsi2p, xsi2p**3, xsi1p * xsi2p**2],
+                      [xsi1p**2, xsi1p**3, xsi1p**2 * xsi2p, xsi1p**4, xsi1p**2 * xsi2p**2, xsi1p**3 * xsi2p],
+                      [xsi2p**2, xsi1p * xsi2p**2, xsi2p**3, xsi1p**2 * xsi2p**2, xsi2p**4, xsi1p * xsi2p**3],
+                      [xsi1p * xsi2p, xsi1p**2 * xsi2p, xsi1p * xsi2p**2, xsi1p**3 * xsi2p, xsi1p * xsi2p**3,
+                       xsi1p**2 * xsi2p**2]
                       ])
     return plist
 
 
 def weights_2d(xsi1, xsi2, delta_mag):
-    xsi_mag = np.sqrt(xsi1 ^ 2 + xsi2 ^ 2)
-    wt = np.exp(-4 * (xsi_mag / delta_mag) ^ 2)
+    xsi_mag = np.sqrt(xsi1**2 + xsi2**2)
+    wt = np.exp(-4 * (xsi_mag / delta_mag)**2)
     # wt = 1.0
     # wt = (xsi_mag/delta_mag)^2
 
@@ -56,8 +55,8 @@ def b_operator_2d():
     return b
 
 
-def FormDiffAmat2D(k, dvolume):
-    delta_mag = np.sqrt(deltax[k] ^ 2 + deltay[k] ^ 2)
+def FormDiffA_mat2D(k, dvolume, delta_mag):
+    d_mag = delta_mag
     # morder = str(n1order) + str(n2order)
     # nsize = getSize2D(n1order, n2order)
     # A00 = []
@@ -72,15 +71,16 @@ def FormDiffAmat2D(k, dvolume):
         i = node[imem]
         xsi1 = coord[i, 1] - coord[k, 1]  # x
         xsi2 = coord[i, 2] - coord[k, 2]  # y
-        p = p_operator_2d(xsi1, xsi2, delta_mag)
-        w = weights_2d(xsi1, xsi2, delta_mag)
-        A[0, 0] = w * p[0, 0] * dvolume[i] + A[0, 0]
-        A[1:2, 0] = w * p[1:2, 0] * dvolume[i] + A[1:2, 0]
-        A[0, 1:2] = w * p[0, 1:2] * dvolume[i] + A[0, 1:2]
-        A[1:2, 1:2] = w * p[1:2, 1:2] * dvolume[i] + A[1:2, 1:2]
-        A[0, 3:5] = w * p[0, 3:5] * dvolume[i] + A[0, 3:5]
-        A[3:5, 0] = w * p[3:5, 0] * dvolume[i] + A[3:5, 0]
-        A[3:5, 3:5] = w * p[3:5, 3:5] * dvolume[i] + A[3:5, 3:5]
+        p = p_operator_2d(xsi1, xsi2, d_mag)
+        w = weights_2d(xsi1, xsi2, d_mag)
+        temp = w*dvolume[0]
+        A[0, 0] = temp * p[0, 0] + A[0, 0]
+        A[1:2, 0] = temp * p[1:2, 0] + A[1:2, 0]
+        A[0, 1:2] = temp * p[0, 1:2] + A[0, 1:2]
+        A[1:2, 1:2] = temp * p[1:2, 1:2] + A[1:2, 1:2]
+        A[0, 3:5] = temp * p[0, 3:5] + A[0, 3:5]
+        A[3:5, 0] = temp * p[3:5, 0] + A[3:5, 0]
+        A[3:5, 3:5] = temp * p[3:5, 3:5] + A[3:5, 3:5]
 
     # A[0] = {'norder': '00', 'Amat': A00}
     # A[1] = {'norder': '01', 'Amat': A01}
@@ -93,7 +93,7 @@ def FormDiffAmat2D(k, dvolume):
     return A
 
 
-def FormDiffBvec2D():
+def FormDiffB_vec2D():
     # morder = str(n1order) + str(n2order)
     matric = b_operator_2d()
     b = []
@@ -109,15 +109,15 @@ def FormDiffBvec2D():
 
 if __name__ == "__main__":
     totnodes = 3
-    deltax = ([4])
-    deltay = ([4])
-    numfam = []
-    node = []
     coord = np.array([[1, 2, 2],
                       [2, 3, 4],
                       [3, 4, 5]])
-    dvolume = [1e6]
-    Amat = FormDiffAmat2D(1, dvolume)
-    bvec = FormDiffBvec2D()
-    amat = np.linalg.inv(Amat).I * bvec
-
+    d_volume = [1e-4]
+    numfam = np.array([1])
+    node = np.array([1])
+    deltax = 0.2
+    deltay = 0.2
+    d_mag = np.sqrt(deltax**2 + deltay**2)
+    P = p_operator_2d(2, 2, d_mag)
+    W = weights_2d(2, 2, d_mag)
+    A = FormDiffA_mat2D(0, d_volume, d_mag)
