@@ -9,7 +9,8 @@ import matplotlib.gridspec as gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import product, combinations
 from sciann_datagenerator import DataGeneratorXYT
-from PDDO import p_operator_2d, b_operator_2d, FormDiffA_mat2D, FormDiffB_vec2D
+from PDDO import FormDiffA_mat2D, FormDiffG_cont2D, FormDiffB_vec2D
+import pickle
 
 
 def axisEqual3D(axx, nn):
@@ -180,56 +181,106 @@ if __name__ == "__main__":
     #
     # Family node
 
-
     def GenerateNodeFamilies(coord_x, coord_y, dist, edge, d_volume):
         totnode = len(coord_x)
         d_r = d_volume[0]
         d_z = d_volume[1]
         family_list = np.tile(dist, totnode).reshape(-1, 4)
+        # print('Default FamilyList is [+ndr, -ndr, +ndz, -ndz]', dist)
+        test = 199
+        print(test + 1, (coord_y[test], coord_x[test]))
         for i in range(totnode):
-            x1 = coord_x[i] + dist[0]
-            x2 = coord_x[i] - dist[1]
-            y1 = coord_y[i] + dist[2]
-            y2 = coord_y[i] - dist[3]
+            x1 = coord_x[i] + dist[0] * d_r
+            x2 = coord_x[i] - dist[1] * d_r
+            y1 = coord_y[i] + dist[2] * d_z
+            y2 = coord_y[i] - dist[3] * d_z
             if x1 > edge[1]:
-                family_list[i][1] = (edge[1] - coord_x[i]) // d_r
+                family_list[i][0] = (edge[1] - coord_x[i]) // d_r
+                if i == test:
+                    print('x1=', coord_x[i], '+', dist[0] * d_r, '=', x1, 'AND',
+                          x1, '>', edge[1], 'So, change FamilyList[0] to', family_list[i][0])
+                    print('After change,coord_x[i] + Family_list[i] is ',
+                          coord_x[i] + family_list[i][0] * d_r, '=', 'edge[1]:', edge[1])
             if x2 < edge[0]:
-                family_list[i][0] = (coord_x[i]) // d_r
+                family_list[i][1] = coord_x[i] // d_r
+                if i == test:
+                    print('x2=', coord_x[i], '-', dist[1] * d_r, '=', x2, 'AND',
+                          x2, '<', edge[0], 'So, change FamilyList[1] to', family_list[i][1])
+                    print('After change,coord_x[i] - Family_list[i] is ',
+                          coord_x[i] - family_list[i][1] * d_r, '=', 'edge[0]:', edge[0])
             if y1 > edge[3]:
-                family_list[i][3] = (edge[3] - coord_y[i]) // d_z
+                family_list[i][2] = (edge[3] - coord_y[i]) // d_z
+                if i == test:
+                    print('y1=', coord_y[i], '+', dist[3] * d_z, '=', y1, 'AND',
+                          y1, '>', edge[3], 'So, change FamilyList[2] to', family_list[i][2])
+                    print('After change,coord_y[i] + Family_list[i] is ',
+                          coord_y[i] + family_list[i][2] * d_z, '=', 'edge[3]:', edge[3])
             if y2 < edge[2]:
-                family_list[i][2] = (coord_y[i]) // d_z
+                family_list[i][3] = coord_y[i] // d_z
+                if i == test:
+                    print('y2=', coord_y[i], '-', dist[2] * d_z, '=', y2, 'AND',
+                          y2, '<', edge[2], 'So, change FamilyList[3] to', family_list[i][3])
+                    print('After change,coord_y[i] - Family_list[i] is ',
+                          coord_y[i] - family_list[i][3] * d_z, '=', 'edge[2]:', edge[2])
+
         return family_list
 
 
-    # dist:|[x1, x2, y1, y2]|, edge:[0, r, 0, z],
-    rr, zz = np.meshgrid(R_star, Z_star)
-    r_list = rr.reshape(-1, 1)
-    z_list = zz.reshape(-1, 1)
+    # dist:|[x1, x2, y1, y2]|, edge:[dr, r, dz, z],
+    # x + x1 < r, x - x2 > 0, y + y1 < z, y - y2 > 0
+    r_list = RR.flatten()
+    z_list = ZZ.flatten()
     FamilyList = GenerateNodeFamilies(r_list, z_list,
                                       [2, 2, 20, 20],
                                       [R_star[0], R_star[-1], Z_star[0],
                                        Z_star[-1]], [dr, dz])
     totnodes = len(r_list)
-    G = []
-    delta_mag = np.sqrt((rr[2, 1] - rr[3, 1])**2 + (zz[2, 1] - zz[2, 2])**2)
-    for i in range(totnodes):
-        Node_Number = FamilyList[i]
-        ir = i // len(R_star)
-        iz = i % nr
-        # i-Node_Number[1] : i+Node_Number[0]
-        # i-Node_Number[3] : i+Node_Number[2]
-        Family_Node_r = rr[i-Node_Number[1]:i+Node_Number[0]]
-        Family_Node_z = zz[i-Node_Number[3]:i+Node_Number[2]]
-        for r_node, xsi1 in enumerate(Family_Node_r):
-            for z_node, xsi2 in enumerate(Family_Node_z):
-                plist = p_operator_2d(xsi1, xsi2, delta_mag)
-                mat_A = FormDiffA_mat2D(xsi1, xsi2)
-                vec_b = FormDiffB_vec2D()
-                vec_a = np.linalg.inv(mat_A) * vec_b
-                # G[i] = sum(mat_A*plist[:, 0])
-                G = np.stack(G, vec_a * plist[0, :])
-
+    G = ()
+    delta_mag = np.sqrt(dz ** 2 + dr ** 2)
+    # for i in range(totnodes):
+    with open('G5.pickle', 'wb') as f:
+        for i in [199]:
+            Node_Number = FamilyList[i]
+            # coord of target:(iz, ir)
+            # nr == len(R_star)
+            # z_list[i], r_list[i] == ZZ[i%nr, i//nr], RR[i%nr, i//nr]
+            # print(i, (z_list[i - 1], r_list[i - 1]))
+            ir = i % len(R_star)  # 199
+            iz = i // len(R_star)  # 0
+            print(i, (ZZ[iz, ir], RR[iz, ir]))
+            print('(iz,ir):', (iz, ir))
+            print('Node_Number', Node_Number)
+            print('[iz-Node_Number[3]+1 :', 'iz+Node_Number[2]+1]')
+            print([iz-Node_Number[3]+1, iz+Node_Number[2]+1])
+            print('[ir-Node_Number[1]+1 :', 'ir+Node_Number[0]+1]')
+            print([ir-Node_Number[1]+1, ir+Node_Number[0]+1])
+            # Coord of Family Node
+            Family_Node_r = RR[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1,
+                               ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
+            Family_Node_z = ZZ[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1,
+                               ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
+            family_nr_flatten = Family_Node_r.flatten()
+            family_nz_flatten = Family_Node_z.flatten()
+            index_target = \
+                np.where(np.logical_and(family_nz_flatten == iz * dz + dz, family_nr_flatten == ir * dr + dr))[0]
+            # print(i, (z_list[i - 1], r_list[i - 1]))
+            # print(family_nz_flatten[index_target[0]], family_nr_flatten[index_target[0]])
+            family_nr_sum = np.delete(family_nr_flatten, index_target[0]) - ir * dr - dr
+            family_nz_sum = np.delete(family_nz_flatten, index_target[0]) - iz * dz - dz
+            # family_node = np.vstack((family_nz_sum, family_nr_sum))
+            A_family_node_mat = FormDiffA_mat2D(family_nr_sum, family_nz_sum, [dr, dz])
+            b_family_node_vec = FormDiffB_vec2D()
+            G00, G10, G01, G20, G02 = FormDiffG_cont2D(family_nr_sum, family_nz_sum,
+                                                       [dr, dz],
+                                                       A_family_node_mat, b_family_node_vec)
+            G_loop = np.vstack((G00, G10, G01, G20, G02))
+            name = 'G' + str(i)
+            locals()[name] = G_loop
+            pickle.dump(locals()[name], f)
+        f.close()
+    # use :
+    # f1 = open('G5.pickle', 'rb')
+    # G = pickle.load(f1)  # will change in loop
 
     # output2mat
     # Rho_star = Rho_data[int(ru/dr):int(rd/dr)+1, int(zu/dz):int(zd/dz)+1]  # R x Z
