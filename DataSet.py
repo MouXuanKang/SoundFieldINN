@@ -1,16 +1,44 @@
+"""
+@Title:
+    Solving Helmholtz equation with PDDO-PINNs.
+    该代码用于准备网络输入所需要的数据，
+    I.  PDDO系数和周边算子分布的四维array保存在.pickle，
+    II. 声场计算程序ram仿真结果和其他环境参数保存在.mat中，
+    III.日志文件保存在为log.txt
+@author:
+    Xu Liang.
+    Department of Underwater Acoustic,
+    Harbin Engineering University.
+    2013053118@hrbeu.edu.cn
+Created on 2021
+"""
 import pathlib
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io
-# from scipy.interpolate import griddata
 import matplotlib.gridspec as gridspec
-# from mpl_toolkits.mplot3d import Axes3D
-# from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import product, combinations
 from sciann_datagenerator import DataGeneratorXYT
 from PDDO import FormDiffA_mat2D, FormDiffG_cont2D, FormDiffB_vec2D
 import pickle
+import tqdm
+from time import sleep
+import logging
+
+
+# 程序日志输出设置
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+handler = logging.FileHandler("log.txt")
+handler.setLevel(logging.INFO)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+# console = logging.StreamHandler()
+# console.setLevel(logging.INFO)
+# console.setFormatter(formatter)
+# logger.addHandler(console)
 
 
 def axisEqual3D(axx, nn):
@@ -24,6 +52,8 @@ def axisEqual3D(axx, nn):
 
 
 if __name__ == "__main__":
+    print('本程序生成PDDO-PINN所需数据集~')
+    print('程序开始！一定不要出错呀！（＞﹏＜）')
     current_path = pathlib.Path(__file__).parents[0]
     par_filepath = str(current_path.joinpath('Data/bin/parameters.txt'))
     rep_filepath = str(current_path.joinpath('Data/bin/real.grid'))
@@ -72,7 +102,6 @@ if __name__ == "__main__":
     R = R_star.shape[0]  # R
     Z = Z_star.shape[0]  # Z
 
-    # print("data.shape:", RR.shape)
     # Rearrange Data
     Re_P_star = Re_P_data[:, 1:nz]  # R x Z
     Im_P_star = Im_P_data[:, 1:nz]  # R x Z
@@ -177,9 +206,10 @@ if __name__ == "__main__":
     axisEqual3D(ax, n4)
     ax.set_title('Image-Pre', fontsize=10)
     plt.savefig('./figures/fig6.png')
+
     # plt.show()
-    #
     # Family node
+
 
     def GenerateNodeFamilies(coord_x, coord_y, dist, edge, d_volume):
         totnode = len(coord_x)
@@ -187,122 +217,195 @@ if __name__ == "__main__":
         d_z = d_volume[1]
         family_list = np.tile(dist, totnode).reshape(-1, 4)
         # print('Default FamilyList is [+ndr, -ndr, +ndz, -ndz]', dist)
-        test = 199
-        print(test + 1, (coord_y[test], coord_x[test]))
-        for i in range(totnode):
-            x1 = coord_x[i] + dist[0] * d_r
-            x2 = coord_x[i] - dist[1] * d_r
-            y1 = coord_y[i] + dist[2] * d_z
-            y2 = coord_y[i] - dist[3] * d_z
+        test = -1
+        # print(test + 1, (coord_y[test], coord_x[test]))
+        print('计算族群点分布ing...〒▽〒')
+        for i1 in tqdm.tqdm(range(totnode)):
+            x1 = coord_x[i1] + dist[0] * d_r
+            x2 = coord_x[i1] - dist[1] * d_r
+            y1 = coord_y[i1] + dist[2] * d_z
+            y2 = coord_y[i1] - dist[3] * d_z
             if x1 > edge[1]:
-                family_list[i][0] = (edge[1] - coord_x[i]) // d_r
+                family_list[i1][0] = (edge[1] - coord_x[i1]) // d_r
                 if i == test:
-                    print('x1=', coord_x[i], '+', dist[0] * d_r, '=', x1, 'AND',
-                          x1, '>', edge[1], 'So, change FamilyList[0] to', family_list[i][0])
-                    print('After change,coord_x[i] + Family_list[i] is ',
-                          coord_x[i] + family_list[i][0] * d_r, '=', 'edge[1]:', edge[1])
+                    logger.debug('x1=', coord_x[i1], '+', dist[0] * d_r, '=', x1, 'AND',
+                                 x1, '>', edge[1], 'So, change FamilyList[0] to', family_list[i1][0])
+                    logger.debug('After change,coord_x[i] + Family_list[i] is ',
+                                 coord_x[i1] + family_list[i1][0] * d_r, '=', 'edge[1]:', edge[1])
             if x2 < edge[0]:
-                family_list[i][1] = coord_x[i] // d_r
+                family_list[i1][1] = coord_x[i1] // d_r
                 if i == test:
-                    print('x2=', coord_x[i], '-', dist[1] * d_r, '=', x2, 'AND',
-                          x2, '<', edge[0], 'So, change FamilyList[1] to', family_list[i][1])
-                    print('After change,coord_x[i] - Family_list[i] is ',
-                          coord_x[i] - family_list[i][1] * d_r, '=', 'edge[0]:', edge[0])
+                    logger.debug('x2=', coord_x[i1], '-', dist[1] * d_r, '=', x2, 'AND',
+                                 x2, '<', edge[0], 'So, change FamilyList[1] to', family_list[i1][1])
+                    logger.debug('After change,coord_x[i] - Family_list[i] is ',
+                                 coord_x[i1] - family_list[i1][1] * d_r, '=', 'edge[0]:', edge[0])
             if y1 > edge[3]:
-                family_list[i][2] = (edge[3] - coord_y[i]) // d_z
+                family_list[i1][2] = (edge[3] - coord_y[i1]) // d_z
                 if i == test:
-                    print('y1=', coord_y[i], '+', dist[3] * d_z, '=', y1, 'AND',
-                          y1, '>', edge[3], 'So, change FamilyList[2] to', family_list[i][2])
-                    print('After change,coord_y[i] + Family_list[i] is ',
-                          coord_y[i] + family_list[i][2] * d_z, '=', 'edge[3]:', edge[3])
+                    logger.debug('y1=', coord_y[i1], '+', dist[3] * d_z, '=', y1, 'AND',
+                                 y1, '>', edge[3], 'So, change FamilyList[2] to', family_list[i1][2])
+                    logger.debug('After change,coord_y[i] + Family_list[i] is ',
+                                 coord_y[i1] + family_list[i1][2] * d_z, '=', 'edge[3]:', edge[3])
             if y2 < edge[2]:
-                family_list[i][3] = coord_y[i] // d_z
+                family_list[i1][3] = coord_y[i1] // d_z
                 if i == test:
-                    print('y2=', coord_y[i], '-', dist[2] * d_z, '=', y2, 'AND',
-                          y2, '<', edge[2], 'So, change FamilyList[3] to', family_list[i][3])
-                    print('After change,coord_y[i] - Family_list[i] is ',
-                          coord_y[i] - family_list[i][3] * d_z, '=', 'edge[2]:', edge[2])
+                    logger.debug('y2=', coord_y[i1], '-', dist[2] * d_z, '=', y2, 'AND',
+                                 y2, '<', edge[2], 'So, change FamilyList[3] to', family_list[i1][3])
+                    logger.debug('After change,coord_y[i] - Family_list[i] is ',
+                                 coord_y[i1] - family_list[i1][3] * d_z, '=', 'edge[2]:', edge[2])
 
         return family_list
 
+
+    Family_size = [3, 3, 3, 3]
 
     # dist:|[x1, x2, y1, y2]|, edge:[dr, r, dz, z],
     # x + x1 < r, x - x2 > 0, y + y1 < z, y - y2 > 0
     r_list = RR.flatten()
     z_list = ZZ.flatten()
     FamilyList = GenerateNodeFamilies(r_list, z_list,
-                                      [2, 2, 20, 20],
+                                      Family_size,
                                       [R_star[0], R_star[-1], Z_star[0],
                                        Z_star[-1]], [dr, dz])
     totnodes = len(r_list)
-    G = ()
     delta_mag = np.sqrt(dz ** 2 + dr ** 2)
-    # for i in range(totnodes):
-    with open('G5.pickle', 'wb') as f:
-        for i in [199]:
-            Node_Number = FamilyList[i]
-            # coord of target:(iz, ir)
-            # nr == len(R_star)
-            # z_list[i], r_list[i] == ZZ[i%nr, i//nr], RR[i%nr, i//nr]
-            # print(i, (z_list[i - 1], r_list[i - 1]))
-            ir = i % len(R_star)  # 199
-            iz = i // len(R_star)  # 0
-            print(i, (ZZ[iz, ir], RR[iz, ir]))
-            print('(iz,ir):', (iz, ir))
-            print('Node_Number', Node_Number)
-            print('[iz-Node_Number[3]+1 :', 'iz+Node_Number[2]+1]')
-            print([iz-Node_Number[3]+1, iz+Node_Number[2]+1])
-            print('[ir-Node_Number[1]+1 :', 'ir+Node_Number[0]+1]')
-            print([ir-Node_Number[1]+1, ir+Node_Number[0]+1])
-            # Coord of Family Node
-            Family_Node_r = RR[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1,
-                               ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
-            Family_Node_z = ZZ[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1,
-                               ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
-            family_nr_flatten = Family_Node_r.flatten()
-            family_nz_flatten = Family_Node_z.flatten()
-            index_target = \
-                np.where(np.logical_and(family_nz_flatten == iz * dz + dz, family_nr_flatten == ir * dr + dr))[0]
-            # print(i, (z_list[i - 1], r_list[i - 1]))
-            # print(family_nz_flatten[index_target[0]], family_nr_flatten[index_target[0]])
-            family_nr_sum = np.delete(family_nr_flatten, index_target[0]) - ir * dr - dr
-            family_nz_sum = np.delete(family_nz_flatten, index_target[0]) - iz * dz - dz
-            # family_node = np.vstack((family_nz_sum, family_nr_sum))
-            A_family_node_mat = FormDiffA_mat2D(family_nr_sum, family_nz_sum, [dr, dz])
-            b_family_node_vec = FormDiffB_vec2D()
-            G00, G10, G01, G20, G02 = FormDiffG_cont2D(family_nr_sum, family_nz_sum,
-                                                       [dr, dz],
-                                                       A_family_node_mat, b_family_node_vec)
-            G_loop = np.vstack((G00, G10, G01, G20, G02))
-            name = 'G' + str(i)
-            locals()[name] = G_loop
-            pickle.dump(locals()[name], f)
-        f.close()
-    # use :
+    Family_Node_R_save = np.empty([len(Z_star),
+                                   len(R_star),
+                                   Family_size[0] + Family_size[1] + 1,
+                                   Family_size[2] + Family_size[3] + 1], dtype=float, order='C')
+    Family_Node_Z_save = np.empty([len(Z_star),
+                                   len(R_star),
+                                   Family_size[0] + Family_size[1] + 1,
+                                   Family_size[2] + Family_size[3] + 1], dtype=float, order='C')
+    Family_Node_RP_save = np.empty([len(Z_star),
+                                    len(R_star),
+                                    Family_size[0] + Family_size[1] + 1,
+                                    Family_size[2] + Family_size[3] + 1], dtype=float, order='C')
+    Family_Node_IP_save = np.empty([len(Z_star),
+                                    len(R_star),
+                                    Family_size[0] + Family_size[1] + 1,
+                                    Family_size[2] + Family_size[3] + 1], dtype=float, order='C')
+    Family_Node_G00_save = np.empty([len(Z_star),
+                                     len(R_star),
+                                     Family_size[0] + Family_size[1] + 1,
+                                     Family_size[2] + Family_size[3] + 1], dtype=float, order='C')
+    Family_Node_G10_save = np.empty([len(Z_star),
+                                     len(R_star),
+                                     Family_size[0] + Family_size[1] + 1,
+                                     Family_size[2] + Family_size[3] + 1], dtype=float, order='C')
+    Family_Node_G01_save = np.empty([len(Z_star),
+                                     len(R_star),
+                                     Family_size[0] + Family_size[1] + 1,
+                                     Family_size[2] + Family_size[3] + 1], dtype=float, order='C')
+    Family_Node_G20_save = np.empty([len(Z_star),
+                                     len(R_star),
+                                     Family_size[0] + Family_size[1] + 1,
+                                     Family_size[2] + Family_size[3] + 1], dtype=float, order='C')
+    Family_Node_G02_save = np.empty([len(Z_star),
+                                     len(R_star),
+                                     Family_size[0] + Family_size[1] + 1,
+                                     Family_size[2] + Family_size[3] + 1], dtype=float, order='C')
+
+    print('循环计算周边动力学系数ing...〒▽〒')
+
+    for i in tqdm.tqdm(range(totnodes)):
+        # for i in [0]:
+        Node_Number = FamilyList[i]
+        # coord of target:(iz, ir), nr == len(R_star)
+        # print(i, (z_list[i - 1], r_list[i - 1]))
+        ir = i % len(R_star)  #
+        iz = i // len(R_star)  #
+        # -3 2 -3 1, 3333
+        x_left = -Node_Number[0] + Family_size[0]
+        x_right = Node_Number[1] + Family_size[1]
+        y_left = -Node_Number[2] + Family_size[2]
+        y_right = Node_Number[3] + Family_size[3]
+        x_size = x_right - x_left
+        y_size = y_right - y_left
+        # Coord of Family Node
+        Family_Node_r = RR[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1,
+                           ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
+        Family_Node_z = ZZ[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1,
+                           ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
+        family_nr_flatten = Family_Node_r.flatten()
+        family_nz_flatten = Family_Node_z.flatten()
+        index_target = \
+            np.where(np.logical_and(family_nz_flatten == iz * dz + dz, family_nr_flatten == ir * dr + dr))[0]
+        # print(i, (z_list[i - 1], r_list[i - 1]))
+        # print(family_nz_flatten[index_target[0]], family_nr_flatten[index_target[0]])
+        family_nr_sum = np.delete(family_nr_flatten, index_target[0]) - ir * dr - dr
+        family_nz_sum = np.delete(family_nz_flatten, index_target[0]) - iz * dz - dz
+        Family_Node_R_save[iz, ir, y_left:y_right, x_left:x_right] = Family_Node_r
+        Family_Node_Z_save[iz, ir, y_left:y_right, x_left:x_right] = Family_Node_z
+        family_node = np.vstack((family_nz_sum, family_nr_sum))
+        A_family_node_mat = FormDiffA_mat2D(family_nr_sum, family_nz_sum, [dr, dz])
+        b_family_node_vec = FormDiffB_vec2D()
+        G00, G10, G01, G20, G02 = FormDiffG_cont2D(family_nr_sum, family_nz_sum,
+                                                   [dr, dz],
+                                                   A_family_node_mat, b_family_node_vec)
+        G_loop = np.vstack((G00, G10, G01, G20, G02))
+
+        G00_shape = np.insert(G00.T, index_target, 0).reshape(y_size, x_size)
+        G10_shape = np.insert(G10.T, index_target, 0).reshape(y_size, x_size)
+        G01_shape = np.insert(G01.T, index_target, 0).reshape(y_size, x_size)
+        G20_shape = np.insert(G20.T, index_target, 0).reshape(y_size, x_size)
+        G02_shape = np.insert(G02.T, index_target, 0).reshape(y_size, x_size)
+        Family_Node_G00_save[iz, ir, y_left:y_right, x_left:x_right] = G00_shape
+        Family_Node_G10_save[iz, ir, y_left:y_right, x_left:x_right] = G10_shape
+        Family_Node_G01_save[iz, ir, y_left:y_right, x_left:x_right] = G01_shape
+        Family_Node_G20_save[iz, ir, y_left:y_right, x_left:x_right] = G20_shape
+        Family_Node_G02_save[iz, ir, y_left:y_right, x_left:x_right] = G02_shape
+        Family_Node_RP_save[iz, ir, y_left:y_right, x_left:x_right] = \
+            Re_P_data[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1, ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
+        Family_Node_IP_save[iz, ir, y_left:y_right, x_left:x_right] = \
+            Im_P_data[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1, ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
+        # name = 'G' + str(i)       # 功能，随循环生成变量名保存变量到.pickle
+        # locals()[name] = G_loop   # 弃用，原因：主函数中调用不方便，变量名过多
+        # pickle.dump(locals()[name], f)
+        sleep(0.01)
+    print('.pickle注入ing...（￣︶￣）')
+    with open('Data/G00.pickle', 'wb') as f1:
+        pickle.dump(Family_Node_G00_save, f1)
+    f1.close()
+    with open('Data/G10.pickle', 'wb') as f2:
+        pickle.dump(Family_Node_G10_save, f2)
+    f2.close()
+    with open('Data/G01.pickle', 'wb') as f3:
+        pickle.dump(Family_Node_G01_save, f3)
+    f3.close()
+    with open('Data/G20.pickle', 'wb') as f4:
+        pickle.dump(Family_Node_G20_save, f4)
+    f4.close()
+    with open('Data/G02.pickle', 'wb') as f5:
+        pickle.dump(Family_Node_G02_save, f5)
+    f5.close()
+    with open('Data/RePImP.pickle', 'wb') as f6:
+        pickle.dump(Family_Node_RP_save, f6)
+        pickle.dump(Family_Node_IP_save, f6)
+    f6.close()
+    with open('Data/FamilyRZ.pickle', 'wb') as f7:
+        pickle.dump(Family_Node_R_save, f7)
+        pickle.dump(Family_Node_Z_save, f7)
+    f7.close()
+    sleep(0.5)
+
+    # how2load :
     # f1 = open('G5.pickle', 'rb')
     # G = pickle.load(f1)  # will change in loop
 
     # output2mat
     # Rho_star = Rho_data[int(ru/dr):int(rd/dr)+1, int(zu/dz):int(zd/dz)+1]  # R x Z
-    RePa_star = Re_P_data.T[:, 0: -1]
-    ImPa_star = Im_P_data.T[:, 0: -1]
-    RePb_star = Re_P_data.T[:, 1:]
-    ImPb_star = Im_P_data.T[:, 1:]
-    ca_star = SSP_data.T[:, 0: -1]
-    cb_star = SSP_data.T[:, 1:]
-    rhoa_star = Rho_data.T[:, 0: -1]
-    rhob_star = Rho_data.T[:, 1:]
-    omega_star = omega.T[:, 1:]
-    Z_star = Z_star
+    print('.mat注入ing...（￣︶￣）')
+    c_star = SSP_data.T[:, :]
+    rho_star = Rho_data.T[:, :]
+    omega_star = omega.T[:, :]
     scipy.io.savemat('Data/cylinder_pre_c0_w0.mat', {
-        'RePa_star': RePa_star,
-        'ImPa_star': ImPa_star,
-        'RePb_star': RePb_star,
-        'ImPb_star': ImPb_star,
-        'ca_star': ca_star,
-        'cb_star': cb_star,
-        'rhoa_star': rhoa_star,
-        'rhob_star': rhob_star,
+        'ReP_star': Re_P_star,
+        'ImP_star': Im_P_star,
+        'c_star': c_star,
+        'rhoa_star': rho_star,
+        'Family_list': FamilyList,
+        'Family_size': Family_size,
         'R': R_star,
         'Z': Z_star,
         'Family': FamilyList,
@@ -310,3 +413,4 @@ if __name__ == "__main__":
         'c0': 1500.0,
         'Versions': 'ramgeo1.5'
     })
+    print('完结撒花！（ ＞﹏＜）')
