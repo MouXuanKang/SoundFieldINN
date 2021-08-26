@@ -20,7 +20,6 @@ import matplotlib.gridspec as gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import product, combinations
 from sciann_datagenerator import DataGeneratorXYT
-from PDDO import FormDiffA_mat2D, FormDiffG_cont2D, FormDiffB_vec2D
 import pickle
 import tqdm
 from time import sleep
@@ -49,6 +48,92 @@ def axisEqual3D(axx, nn):
     r = maxsize / nn
     for ctr, dim in zip(centers, 'xyz'):
         getattr(axx, 'set_{}lim'.format(dim))(ctr - r, ctr + r)
+
+
+def p_operator_2d(xsi_1, xsi_2, Delta_mag):
+    # xsi1 is x, xsi2 is y, delta_mag = sqrt(deltax(i)**2+deltay(i)**2+deltaz(i)**2)
+    xsi1p = xsi_1 / Delta_mag
+    xsi2p = xsi_2 / Delta_mag
+    plist = np.array([[1, xsi1p, xsi2p, xsi1p ** 2, xsi2p ** 2, xsi1p * xsi2p],
+                      [xsi1p, xsi1p ** 2, xsi1p * xsi2p, xsi1p ** 3, xsi1p * xsi2p ** 2, xsi1p ** 2 * xsi2p],
+                      [xsi2p, xsi1p * xsi2p, xsi2p ** 2, xsi1p ** 2 * xsi2p, xsi2p ** 3, xsi1p * xsi2p ** 2],
+                      [xsi1p ** 2, xsi1p ** 3, xsi1p ** 2 * xsi2p, xsi1p ** 4, xsi1p ** 2 * xsi2p ** 2,
+                       xsi1p ** 3 * xsi2p],
+                      [xsi2p ** 2, xsi1p * xsi2p ** 2, xsi2p ** 3, xsi1p ** 2 * xsi2p ** 2, xsi2p ** 4,
+                       xsi1p * xsi2p ** 3],
+                      [xsi1p * xsi2p, xsi1p ** 2 * xsi2p, xsi1p * xsi2p ** 2, xsi1p ** 3 * xsi2p, xsi1p * xsi2p ** 3,
+                       xsi1p ** 2 * xsi2p ** 2]
+                      ])
+    return plist
+
+
+def weights_2d(xsi_1, xsi_2, Delta_mag):
+    # the wight of Family-Nodes, xsi1 is x, xsi2 is y, delta_mag = sqrt(deltax(i)**2+deltay(i)**2+deltaz(i)**2)
+    xsi_mag = np.sqrt(xsi_1 ** 2 + xsi_2 ** 2)
+    wt = np.exp(-4 * (xsi_mag / Delta_mag) ** 2)
+    return wt
+
+
+def b_operator_2d():
+    # vector b
+    b = np.array([[1, 0, 0, 0, 0, 0],
+                  [0, 1, 0, 0, 0, 0],
+                  [0, 0, 1, 0, 0, 0],
+                  [0, 0, 0, 2, 0, 0],
+                  [0, 0, 0, 0, 2, 0],
+                  [0, 0, 0, 0, 0, 1]])
+
+    return b
+
+
+def FormDiffA_mat2D(Family_r, Family_z, d_volume):
+    # k is family number, d_volume is dx[k]*dy[k], delta_mag = sqrt(deltax(i)**2+deltay(i)**2+deltaz(i)**2)
+    # numfam is number of family, family_node is node number
+    fam_num = len(Family_r)
+    DiffA_mat2D = np.zeros((6, 6), dtype=float)
+    d_r = d_volume[0]
+    d_z = d_volume[1]
+    Delta_Volume = d_r * d_z
+    Delta_mag = np.sqrt(d_r**2 + d_z**2)
+    for i_mem in range(fam_num):
+        xsi_1 = np.linalg.norm(Family_r[i_mem])
+        xsi_2 = np.linalg.norm(Family_z[i_mem])
+        p = p_operator_2d(xsi_1, xsi_2, Delta_mag)
+        w = weights_2d(xsi_1, xsi_2, Delta_mag)
+        coef = w * Delta_Volume
+        # print(i_mem+1, ' / ', fam_num, coef)
+        DiffA_mat2D = coef * p + DiffA_mat2D
+    return DiffA_mat2D
+
+
+def FormDiffG_cont2D(Family_r, Family_z, d_volume, A_mat, b_vec):
+    fam_num = len(Family_r)
+    DiffG00_mat2D = []
+    DiffG10_mat2D = []
+    DiffG01_mat2D = []
+    DiffG20_mat2D = []
+    DiffG02_mat2D = []
+    d_r = d_volume[0]
+    d_z = d_volume[1]
+    # Delta_Volume = dr * dz
+    Delta_mag = np.sqrt(d_r ** 2 + d_z ** 2)
+    a_vec = np.linalg.inv(A_mat) * b_vec
+    for i_mem in range(fam_num):
+        xsi_1 = np.linalg.norm(Family_r[i_mem])
+        xsi_2 = np.linalg.norm(Family_z[i_mem])
+        p_list = p_operator_2d(xsi_1, xsi_2, Delta_mag)
+        w = weights_2d(xsi_1, xsi_2, Delta_mag)
+        DiffG00_mat2D = np.append(DiffG00_mat2D, [np.sum(a_vec[0, :] * p_list[:, 0] * w)])
+        DiffG10_mat2D = np.append(DiffG10_mat2D, [np.sum(a_vec[1, :] * p_list[:, 0] * w)])
+        DiffG01_mat2D = np.append(DiffG01_mat2D, [np.sum(a_vec[2, :] * p_list[:, 0] * w)])
+        DiffG20_mat2D = np.append(DiffG20_mat2D, [np.sum(a_vec[3, :] * p_list[:, 0] * w)])
+        DiffG02_mat2D = np.append(DiffG02_mat2D, [np.sum(a_vec[4, :] * p_list[:, 0] * w)])
+    return DiffG00_mat2D, DiffG10_mat2D, DiffG01_mat2D, DiffG20_mat2D, DiffG02_mat2D
+
+
+def FormDiffB_vec2D():
+    vec_b = b_operator_2d()
+    return vec_b
 
 
 if __name__ == "__main__":
@@ -92,21 +177,23 @@ if __name__ == "__main__":
         Rho_data = np.reshape(temp, [nr, nz])
         f4.close()
 
-    SSP_star = SSP_data[:, 1:iz]  # R x Z
+    SSP_star = SSP_data[:, 1:-1]  # R x Z
     omega = omega * np.ones(SSP_star.shape)
     K_star = omega / SSP_star
 
     R_star = np.arange(dr, Range_max + dr, dr)
-    Z_star = np.arange(dz, nz * dz, dz, dtype=int)
+    Z_star = np.arange(dz, (iz+1) * dz, dz, dtype=int)
 
     R = R_star.shape[0]  # R
     Z = Z_star.shape[0]  # Z
 
     # Rearrange Data
-    Re_P_star = Re_P_data[:, 1:nz]  # R x Z
-    Im_P_star = Im_P_data[:, 1:nz]  # R x Z
+    Re_P_star = Re_P_data[:, 1:nz-1]  # R x Z
+    Im_P_star = Im_P_data[:, 1:nz-1]  # R x Z
     TL = np.sqrt(Re_P_star ** 2 + Im_P_star ** 2)
-
+    # plt.figure(1)
+    # plt.imshow(TL.T)  # 199x200
+    # plt.show()
     ru = 0.1
     rd = 9.0
     zu = 1.0
@@ -219,41 +306,40 @@ if __name__ == "__main__":
         # print('Default FamilyList is [+ndr, -ndr, +ndz, -ndz]', dist)
         test = -1
         # print(test + 1, (coord_y[test], coord_x[test]))
-        print('计算族群点分布ing...〒▽〒')
-        for i1 in tqdm.tqdm(range(totnode)):
+        # print('计算族群点分布ing...〒▽〒')
+        for i1 in range(totnode):
             x1 = coord_x[i1] + dist[0] * d_r
             x2 = coord_x[i1] - dist[1] * d_r
             y1 = coord_y[i1] + dist[2] * d_z
             y2 = coord_y[i1] - dist[3] * d_z
             if x1 > edge[1]:
                 family_list[i1][0] = (edge[1] - coord_x[i1]) // d_r
-                if i == test:
+                if i1 == test:
                     logger.debug('x1=', coord_x[i1], '+', dist[0] * d_r, '=', x1, 'AND',
                                  x1, '>', edge[1], 'So, change FamilyList[0] to', family_list[i1][0])
                     logger.debug('After change,coord_x[i] + Family_list[i] is ',
                                  coord_x[i1] + family_list[i1][0] * d_r, '=', 'edge[1]:', edge[1])
             if x2 < edge[0]:
                 family_list[i1][1] = coord_x[i1] // d_r
-                if i == test:
+                if i1 == test:
                     logger.debug('x2=', coord_x[i1], '-', dist[1] * d_r, '=', x2, 'AND',
                                  x2, '<', edge[0], 'So, change FamilyList[1] to', family_list[i1][1])
                     logger.debug('After change,coord_x[i] - Family_list[i] is ',
                                  coord_x[i1] - family_list[i1][1] * d_r, '=', 'edge[0]:', edge[0])
             if y1 > edge[3]:
                 family_list[i1][2] = (edge[3] - coord_y[i1]) // d_z
-                if i == test:
+                if i1 == test:
                     logger.debug('y1=', coord_y[i1], '+', dist[3] * d_z, '=', y1, 'AND',
                                  y1, '>', edge[3], 'So, change FamilyList[2] to', family_list[i1][2])
                     logger.debug('After change,coord_y[i] + Family_list[i] is ',
                                  coord_y[i1] + family_list[i1][2] * d_z, '=', 'edge[3]:', edge[3])
             if y2 < edge[2]:
                 family_list[i1][3] = coord_y[i1] // d_z
-                if i == test:
+                if i1 == test:
                     logger.debug('y2=', coord_y[i1], '-', dist[2] * d_z, '=', y2, 'AND',
                                  y2, '<', edge[2], 'So, change FamilyList[3] to', family_list[i1][3])
                     logger.debug('After change,coord_y[i] - Family_list[i] is ',
                                  coord_y[i1] - family_list[i1][3] * d_z, '=', 'edge[2]:', edge[2])
-
         return family_list
 
 
@@ -403,13 +489,12 @@ if __name__ == "__main__":
         'ReP_star': Re_P_star,
         'ImP_star': Im_P_star,
         'c_star': c_star,
-        'rhoa_star': rho_star,
+        'rho_star': rho_star,
         'Family_list': FamilyList,
         'Family_size': Family_size,
         'R': R_star,
         'Z': Z_star,
-        'Family': FamilyList,
-        'omega_star': omega_star,
+        'omega_star': omega_star[0][0],
         'c0': 1500.0,
         'Versions': 'ramgeo1.5'
     })
