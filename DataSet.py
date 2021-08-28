@@ -19,7 +19,7 @@ import scipy.io
 import matplotlib.gridspec as gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import product, combinations
-from sciann_datagenerator import DataGeneratorXYT
+from helmholtz_test.sciann_datagenerator import DataGeneratorXYT
 import pickle
 import tqdm
 from time import sleep

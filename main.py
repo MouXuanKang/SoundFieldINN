@@ -105,7 +105,7 @@ if __name__ == "__main__":
     # flag
     # IsTrain = False
     IsTrain = True
-    k0_train = 150.0*3.1415926/1500.0
+    k0_train = 150.0 * 3.1415926 / 1500.0
     # Variables and Fields
     r = Variable("r", units=horizont, dtype='float64')
     z = Variable("z", units=horizont, dtype='float64')
@@ -113,11 +113,7 @@ if __name__ == "__main__":
     G00 = Variable("G00", units=horizont, dtype='float64')
     G02 = Variable("G02", units=horizont, dtype='float64')
     G20 = Variable("G20", units=horizont, dtype='float64')
-    # p_real = Variable("p_real", units=horizont, dtype='float64')
-    # p_imag = Variable("p_imag", units=horizont, dtype='float64')
-    # k0 = Parameter(150.0*3.1415926/1500.0, inputs=[r, z, k], name='k0')
-
-    layers = 4*[49]
+    layers = 4 * [49]
     p_real = Functional("p_real", [r, z, k], layers, 'tanh')
     p_imag = Functional("p_imag", [r, z, k], layers, 'tanh')
 
@@ -129,10 +125,10 @@ if __name__ == "__main__":
     d5 = Data(G02)
     d6 = Data(G20)
     # d4 = Data(k0)
-    c1 = PDE(k**2*tf.reduce_sum(tf.matmul(G00, p_real), axis=1) +
+    c1 = PDE(k ** 2 * tf.reduce_sum(tf.matmul(G00, p_real), axis=1) +
              tf.reduce_sum(tf.matmul(G20, p_real), axis=1) +
              tf.reduce_sum(tf.matmul(G02, p_real)), axis=1)
-    c2 = PDE(k**2*tf.reduce_sum(tf.matmul(G00, p_imag), axis=1) +
+    c2 = PDE(k ** 2 * tf.reduce_sum(tf.matmul(G00, p_imag), axis=1) +
              tf.reduce_sum(tf.matmul(G20, p_imag), axis=1) +
              tf.reduce_sum(tf.matmul(G02, p_imag)), axis=1)
 
@@ -147,12 +143,12 @@ if __name__ == "__main__":
     data_c1 = 'zeros'
     data_c2 = 'zeros'
     # constraints rename
-    input = [r, z, k, G00, G02, G20]
+    input_ = [r, z, k, G00, G02, G20]
     input_data = [r_train, z_train, k_train, G00_train, G02_train, G20_train]
-    cons = [d1, d2, d3, d4, d5, d6, c1, c2]
+    cons_ = [d1, d2, d3, d4, d5, d6, c1, c2]
     cons_data = [data_d1, data_d2, data_d3, data_d4, data_d5, data_d6, data_c1, data_c2]
 
-    model = SciModel(input, cons)
+    model = SciModel(input_, cons_)
 
     # callbacks
     current_file_path = pathlib.Path(__file__).parents[0]
