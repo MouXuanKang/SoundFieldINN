@@ -1,7 +1,9 @@
 # PDDO-PINN-Helmholtz
-基于物理信息神经网络框架（PINN）实现水中声场信息的神经网络预报。
-从计算效率、计算精度等多方面出发，有效改善三维声场计算低效问题。
-项目主要技术包含周边动力学算子（PDDO）
-划分子域并行计算技术
+Based on the physical information neural network framework (PINNs) to achieve neural network forecasting of sound field information in water.
+From various aspects such as computational efficiency and computational accuracy, it effectively improves the inefficiency of 3D sound field computation.
+The main technology of the project contains Peripheral Dynamics Operator (PDDO)
 
-项目成果包含但不限于和传统声场预报经典算例比较。
+How to use:
+Dataset: run Dataset.py to get .pickle and .mat
+My model:
+then run main.py
