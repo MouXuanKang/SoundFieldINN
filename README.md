@@ -32,7 +32,9 @@ TypeError: Failed to convert object of type <class 'sciann.functionals.variable.
 
 ## My model and Why use PDDO
 **My dataset**
-./figures/fig5.png
+![image](https://github.com/xuliang5115/PDDO-PINN-Helmholtz/blob/master/figures/fig6.png)
+**Target and Family**
+![image](https://github.com/xuliang5115/PDDO-PINN-Helmholtz/blob/master/figures/fig5.png)
 
 ## References：
 1. Haghighat E, Bekar A C, Madenci E, et al. A nonlocal physics-informed deep learning framework using the peridynamic differential operator[J]. Computer Methods in Applied Mechanics and Engineering, 2021, 385: 114012.
