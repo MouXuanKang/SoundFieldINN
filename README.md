@@ -30,6 +30,9 @@ TypeError: Failed to convert object of type <class 'sciann.functionals.variable.
 >*Governing equations is Inhomogeneous Helmholtz equation*  
 >*The main scenario is engineering application, so domain can't use [1,1]*
 
+## My model and Why use PDDO
+[My dataset](figures/fig5.png)
+
 ## References：
 1. Haghighat E, Bekar A C, Madenci E, et al. A nonlocal physics-informed deep learning framework using the peridynamic differential operator[J]. Computer Methods in Applied Mechanics and Engineering, 2021, 385: 114012.
 2. Madenci E, Barut A, Dorduncu M. Peridynamic differential operator for numerical analysis[M]. Springer International Publishing, 2019.
