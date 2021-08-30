@@ -1,11 +1,7 @@
 # PDDO-PINN-Helmholtz
 ## Overview
 Based on the physical information neural network framework (PINNs) to achieve neural network forecasting of sound field information in water.
-
-From various aspects such as computational efficiency and computational accuracy, it effectively improves the inefficiency of 3D sound field computation.
-
-The main technology of the project contains Peripheral Dynamics Operator (PDDO)
-
+~~undone, hopeing i can finish it...~~
 ## How to use:
 
 Dataset: run Dataset.py to get .pickle and .mat
@@ -25,7 +21,8 @@ main.py
 ## Current Issues: 
 It looks like I got the type input wrong, unit and shape are two kind Arg.
 
-*TypeError: Failed to convert object of type <class 'sciann.functionals.variable.Variable'> to Tensor. Contents: <sciann.functionals.variable.Variable object at* *0x7fd4252b18d0>. Consider casting elements to a supported type.* ～～Very low level mistake,I'm learning～～
+*TypeError: Failed to convert object of type <class 'sciann.functionals.variable.Variable'> to Tensor. Contents: <sciann.functionals.variable.Variable object at* *0x7fd4252b18d0>. Consider casting elements to a supported type.* 
+~~Very low level mistake,and i'm learning keras to correct it~~
 
 >*Governing equations is Inhomogeneous Helmholtz equation*  
 >*The main scenario is engineering application, so domain can't use [1,1]*
