@@ -1,17 +1,26 @@
 # PDDO-PINN-Helmholtz
+# Table of Contents
+
+1. [Overview](#Overview)
+2. [Usage](#Usage)
+3. [Features](#Features)
+4. [Current Issues](#Current Issues)
+5. [Background](#Background)
+6. [References](#References)
+
 ## Overview
 Based on the physical information neural network framework (PINNs) to achieve neural network forecasting of sound field information in water.
 ~~undone, hopeing i can finish it...~~
-## How to use:
+## Usage:
 
 Dataset: run Dataset.py to get .pickle and .mat
 ```
-DataSet.py
+$ DataSet.py
 ```
 
 My model:
 ```
-main.py
+$ main.py
 ```
 ## Features:
 - [x] Create dataset, include complete pressure.
@@ -22,9 +31,9 @@ main.py
 It looks like I got the type input wrong, unit and shape are two kind Arg.
 
 *TypeError: Failed to convert object of type <class 'sciann.functionals.variable.Variable'> to Tensor. Contents: <sciann.functionals.variable.Variable object at* *0x7fd4252b18d0>. Consider casting elements to a supported type.* 
-~~Very low level mistake,and i'm learning keras to correct it~~
+<span class="spoiler">Very stupid mistake,and i'm learning keras to correct it...</span>
 
-## My model:  
+## Background:  
 I get real-pressure and image-pressure by other method.And choose Family with size [7,7].  
 >*Governing equations is Inhomogeneous Helmholtz equation*  
 
