@@ -24,11 +24,9 @@ It looks like I got the type input wrong, unit and shape are two kind Arg.
 *TypeError: Failed to convert object of type <class 'sciann.functionals.variable.Variable'> to Tensor. Contents: <sciann.functionals.variable.Variable object at* *0x7fd4252b18d0>. Consider casting elements to a supported type.* 
 ~~Very low level mistake,and i'm learning keras to correct it~~
 
->*Governing equations is Inhomogeneous Helmholtz equation*  
->*The main scenario is engineering application, so domain can't use [1,1]*
-
 ## My model:  
 I get real-pressure and image-pressure by other method.And choose Family with size [7,7].  
+>*Governing equations is Inhomogeneous Helmholtz equation*  
 
 <p align="center">
   <img src="./figures/fig6.png" width="306" height="205">
