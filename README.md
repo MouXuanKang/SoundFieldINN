@@ -30,10 +30,11 @@ TypeError: Failed to convert object of type <class 'sciann.functionals.variable.
 >*Governing equations is Inhomogeneous Helmholtz equation*  
 >*The main scenario is engineering application, so domain can't use [1,1]*
 
-## My model and Why use PDDO
-<div align=ceter><img width="200" height="200" src="https://github.com/xuliang5115/PDDO-PINN-Helmholtz/blob/master/figures/fig6.png" alt="My dataset">
-  
-<div align=ceter><img width="200" height="200" src="https://github.com/xuliang5115/PDDO-PINN-Helmholtz/blob/master/figures/fig5.png" alt="Target and Family">
+## My model
+I get real-pressure and image-pressure by other method.
+<div align=ceter><img width="600" height="400" src="https://github.com/xuliang5115/PDDO-PINN-Helmholtz/blob/master/figures/fig6.png" alt="My dataset">
+And choose Family with size*[7,7]*
+<div align=ceter><img width="600" height="400" src="https://github.com/xuliang5115/PDDO-PINN-Helmholtz/blob/master/figures/fig5.png" alt="Target and Family">
 
 ## References：
 1. Haghighat E, Bekar A C, Madenci E, et al. A nonlocal physics-informed deep learning framework using the peridynamic differential operator[J]. Computer Methods in Applied Mechanics and Engineering, 2021, 385: 114012.
