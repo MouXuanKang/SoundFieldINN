@@ -43,6 +43,7 @@ If use PINNs:
   <img src="./figures/fig5-1.png" width="606" height="245">
 </p>
 
+Left is exact pressure, right is different between PINNs predict and exact solution.
 ## References：
 1. Haghighat E, Bekar A C, Madenci E, et al. A nonlocal physics-informed deep learning framework using the peridynamic differential operator[J]. Computer Methods in Applied Mechanics and Engineering, 2021, 385: 114012.
 2. Madenci E, Barut A, Dorduncu M. Peridynamic differential operator for numerical analysis[M]. Springer International Publishing, 2019.
