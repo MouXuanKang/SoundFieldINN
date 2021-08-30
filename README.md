@@ -40,7 +40,7 @@ I get real-pressure and image-pressure by other method.And choose Family with si
 
 If use PINNs: 
 <p align="center">
-  <img src="./figures/fig5-1.png" width="606" height="405">
+  <img src="./figures/fig5-1.png" width="606" height="245">
 </p>
 
 ## References：
