@@ -1,5 +1,6 @@
 # PDDO-PINN-Helmholtz
-# Table of Contents
+
+## Table of Contents
 
 1. [Overview](#Overview)
 2. [Usage](#Usage)
@@ -30,18 +31,8 @@ $ main.py
 ## Current Issues: 
 It looks like I got the type input wrong, unit and shape are two kind Arg.
 
-*TypeError: Failed to convert object of type <class 'sciann.functionals.variable.Variable'> to Tensor. Contents: <sciann.functionals.variable.Variable object at* *0x7fd4252b18d0>. Consider casting elements to a supported type.* 
-
-<span class="spoiler">Very stupid mistake,and i'm learning keras to correct it...</span>
-.spoiler {
-  color: #000;
-  background-color: #000;
-}
- 
-.spoiler:hover {
-  color: #FFF;
-}
-
+*TypeError: Failed to convert object of type <class 'sciann.functionals.variable.Variable'> to Tensor. Contents: <sciann.functionals.variable.Variable object at* *0x7fd4252b18d0>. Consider casting elements to a supported type.*   
+~~Very stupid mistake,and i'm learning keras to correct it...~~
 
 ## Background:  
 I get real-pressure and image-pressure by other method.And choose Family with size [7,7].  
