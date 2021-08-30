@@ -34,8 +34,8 @@ TypeError: Failed to convert object of type <class 'sciann.functionals.variable.
 I get real-pressure and image-pressure by other method.And choose Family with size [7,7].  
 
 <p align="center">
-  <img src="./figures/fig6.png" width="406" height="305">
-  <img src="./figures/fig5.png" width="406" height="305">
+  <img src="./figures/fig6.png" width="306" height="205">
+  <img src="./figures/fig5.png" width="306" height="205">
 </p>
 
 If use PINNs: 
