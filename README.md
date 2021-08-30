@@ -1,4 +1,5 @@
-# PDDO-PINN-Helmholtz
+# Sound field information neural network
+Sound field information predict with PINNs framwork, in this project-test i try to use peridynamic differential operator...
 
 ## Table of Contents
 
@@ -10,8 +11,11 @@
 6. [References](#References)
 
 ## Overview
-Based on the physical information neural network framework (PINNs) to achieve neural network forecasting of sound field information in water.
-~~undone, hopeing i can finish it...~~
+~~project undone, hopeing i can finish it...~~
+My project scheduled in "Features".If i finish this project, i'll put features in here.
+I'll put the questions I feel stuck on me in "Current-Issues" and welcome your advice.
+I explain my project simplely in "Background".
+
 ## Usage:
 
 Dataset: run Dataset.py to get .pickle and .mat
@@ -36,19 +40,23 @@ It looks like I got the type input wrong, unit and shape are two kind Arg.
 
 ## Background:  
 I get real-pressure and image-pressure by other method.And choose Family with size [7,7].  
->*Governing equations is Inhomogeneous Helmholtz equation*  
+>*Governing equations is Inhomogeneous Helmholtz equation.* 
+>Figure below is transmission of pressure with range and depth.  
+>Ofcourse i split complex pressure in real-part and image-part.So there is two dataset.
+>Actually,every application has it's PDEs,i think we should care how to make model work...
 
 <p align="center">
   <img src="./figures/fig6.png" width="306" height="205">
   <img src="./figures/fig5.png" width="306" height="205">
 </p>
 
-If use PINNs: 
+PINNs results, with *split-stepping method*(or i can't start trainning, LOSS always high): 
 <p align="center">
   <img src="./figures/fig5-1.png" width="606" height="205">
 </p>
 
-Left is exact pressure, right is different between PINNs predict and exact solution.Obviously there is a learning error at the near source point where the sound pressure is at a lower sound pressure level. I suspect that the use of PDDO to enhance network performance may solve this propagation problem.
+Figure right is error-pointwise,seems to be working with split-stepping.But part of near-field place is not work.So may PDDO could solve that?
+>welcome to discuse abous the how to make model working.It seem that we can's use sciANN direct solve our engerneering problem.
 ## References：
 1. Haghighat E, Bekar A C, Madenci E, et al. A nonlocal physics-informed deep learning framework using the peridynamic differential operator[J]. Computer Methods in Applied Mechanics and Engineering, 2021, 385: 114012.
 2. Madenci E, Barut A, Dorduncu M. Peridynamic differential operator for numerical analysis[M]. Springer International Publishing, 2019.
