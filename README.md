@@ -23,9 +23,9 @@ main.py
 - [ ] train and test.
 
 ## Current Issues: 
-It looks like I got the type input wrong, unit and shape are two types of input.
+It looks like I got the type input wrong, unit and shape are two kind Arg.
 
-*TypeError: Failed to convert object of type <class 'sciann.functionals.variable.Variable'> to Tensor. Contents: <sciann.functionals.variable.Variable object at *0x7fd4252b18d0>. Consider casting elements to a supported type.* ～～Very low level mistake,I'm learning～～
+*TypeError: Failed to convert object of type <class 'sciann.functionals.variable.Variable'> to Tensor. Contents: <sciann.functionals.variable.Variable object at* *0x7fd4252b18d0>. Consider casting elements to a supported type.* ～～Very low level mistake,I'm learning～～
 
 >*Governing equations is Inhomogeneous Helmholtz equation*  
 >*The main scenario is engineering application, so domain can't use [1,1]*
