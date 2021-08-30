@@ -31,11 +31,16 @@ TypeError: Failed to convert object of type <class 'sciann.functionals.variable.
 >*The main scenario is engineering application, so domain can't use [1,1]*
 
 ## My model:  
-I get real-pressure and image-pressure by other method.And choose Family with size*[7,7]*  
+I get real-pressure and image-pressure by other method.And choose Family with size [7,7].  
 
 <p align="center">
   <img src="./figures/fig6.png" width="406" height="305">
   <img src="./figures/fig5.png" width="406" height="305">
+</p>
+
+If use PINNs: 
+<p align="center">
+  <img src="./figures/fig5-1.png" width="806" height="605">
 </p>
 
 ## References：
