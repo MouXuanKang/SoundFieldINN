@@ -1,0 +1,7 @@
+numpy~=1.20.1
+matplotlib~=3.3.4
+tensorflow~=2.1.0
+tensorflow-gpu~=2.1.0
+scipy~=1.4.1
+sciann~=0.6.3.1
+tqdm~=4.62.1
