@@ -11,3 +11,9 @@ Dataset: run Dataset.py to get .pickle and .mat
 
 My model:
 run main.py
+
+# Progress: 
+Instead of feeding the network with [1,1]arrays, each batch is fed with [1,49]arrays.But incomplete due to a Type error.
+
+TypeError: Failed to convert object of type <class 'sciann.functionals.variable.Variable'> to Tensor. Contents: <sciann.functionals.variable.Variable object at 0x7fd4252b18d0>. Consider casting elements to a supported type.
+
