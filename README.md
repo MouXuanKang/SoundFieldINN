@@ -25,9 +25,9 @@ main.py
 ## Issues: 
 Instead of feeding the network with [1,1]arrays, each batch is fed with [1,49]arrays.But incomplete due to a Type error.
 
-TypeError: Failed to convert object of type <class 'sciann.functionals.variable.Variable'> to Tensor. Contents: <sciann.functionals.variable.Variable object at 0x7fd4252b18d0>. Consider casting elements to a supported type.
+TypeError: Failed to convert object of type <class 'sciann.functionals.variable.Variable'> to Tensor. Contents: <sciann.functionals.variable.Variable object at 0x7fd4252b18d0>. Consider casting elements to a supported type.  
 
->*Governing equations is Inhomogeneous Helmholtz equation*
+>*Governing equations is Inhomogeneous Helmholtz equation*  
 >*The main scenario is engineering application, so domain can't use [1,1]*
 
 ## References：
