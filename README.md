@@ -8,14 +8,14 @@ The main technology of the project contains Peripheral Dynamics Operator (PDDO)
 ## How to use:
 
 Dataset: run Dataset.py to get .pickle and .mat
-‘
+```
 Dataset.py
-’
+```
 
 My model:
-‘
+```
 main.py
-’
+```
 ## Progress: 
 Instead of feeding the network with [1,1]arrays, each batch is fed with [1,49]arrays.But incomplete due to a Type error.
 
