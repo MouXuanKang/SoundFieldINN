@@ -4,7 +4,7 @@
 1. [Overview](#Overview)
 2. [Usage](#Usage)
 3. [Features](#Features)
-4. [Current Issues](#Current_Issues)
+4. [Current Issues](#Current-Issues)
 5. [Background](#Background)
 6. [References](#References)
 
