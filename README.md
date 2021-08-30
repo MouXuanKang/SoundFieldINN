@@ -11,10 +11,10 @@ Sound field information predict with PINNs framwork, in this project-test i try 
 6. [References](#References)
 
 ## Overview
-~~project undone, hopeing i can finish it...~~
-My project scheduled in "Features".If i finish this project, i'll put features in here.
-I'll put the questions I feel stuck on me in "Current-Issues" and welcome your advice.
-I explain my project simplely in "Background".
+~~project undone, hopeing i can finish it...~~  
+My project scheduled in "Features".If i finish this project, i'll put features in here.  
+I'll put the questions I feel stuck on me in "Current-Issues" and welcome your advice.  
+I explain my project simplely in "Background".  
 
 ## Usage:
 
