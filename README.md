@@ -10,7 +10,7 @@ The main technology of the project contains Peripheral Dynamics Operator (PDDO)
 
 Dataset: run Dataset.py to get .pickle and .mat
 ```
-Dataset.py
+DataSet.py
 ```
 
 My model:
