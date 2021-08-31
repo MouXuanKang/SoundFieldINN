@@ -1,5 +1,6 @@
 # Sound field information neural network
-Sound field information predict with PINNs framwork, in this project-test i try to use peridynamic differential operator...
+Sound field information predict with PINNs framwork, in this project-test i try to use ~~peridynamic differential operator...~~
+PDDO seems not working,so i retrying split-stepping...
 
 ## Table of Contents
 
@@ -33,17 +34,15 @@ $ main.py
 - [ ] train and test.
 
 ## Current Issues: 
-It looks like I got the type input wrong, unit and shape are two kind Arg.
-
-*TypeError: Failed to convert object of type <class 'sciann.functionals.variable.Variable'> to Tensor. Contents: <sciann.functionals.variable.Variable object at* *0x7fd4252b18d0>. Consider casting elements to a supported type.*   
-~~Very stupid mistake,and i'm learning keras to correct it...~~
+I haven't figured out if this really works, maybe it's no different than increasing the batchsize.
 
 ## Background:  
 I get real-pressure and image-pressure by other method.And choose Family with size [7,7].  
 >*Governing equations is Inhomogeneous Helmholtz equation.* 
 >Figure below is transmission of pressure with range and depth.  
 >Ofcourse i split complex pressure in real-part and image-part.So there is two dataset.
->Actually,every application has it's PDEs,i think we should care how to make model work...
+>~~Actually,every application has it's PDEs,i think we should care how to make model work...~~
+>yes...i writed a wrong PDE and i have change my phan.
 
 <p align="center">
   <img src="./figures/fig6.png" width="306" height="205">
@@ -55,8 +54,8 @@ PINNs results, with *split-stepping method*(or i can't start trainning, LOSS alw
   <img src="./figures/fig5-1.png" width="606" height="205">
 </p>
 
-Figure right is error-pointwise,seems to be working with split-stepping.But part of near-field place is not work.So may PDDO could solve that?
->welcome to discuse abous the how to make model working.It seem that we can's use sciANN direct solve our engerneering problem.
+Figure right is error-pointwise,seems to be working with split-stepping.But part of near-field place is not work.
+
 ## References：
 1. Haghighat E, Bekar A C, Madenci E, et al. A nonlocal physics-informed deep learning framework using the peridynamic differential operator[J]. Computer Methods in Applied Mechanics and Engineering, 2021, 385: 114012.
 2. Madenci E, Barut A, Dorduncu M. Peridynamic differential operator for numerical analysis[M]. Springer International Publishing, 2019.
