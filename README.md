@@ -40,10 +40,10 @@ I haven't figured out if this really works, maybe it's no different than increas
 This is because not all points have a large amplitude. Since PINN calculates the loss in a batch, perhaps replacing this batch with the Family calculation will give better results.  
 I get real-pressure and image-pressure by other method.And choose Family with size [7,7].  
 The point in the 49 black boxes is a batch.
->*Governing equations is Inhomogeneous Helmholtz equation.* 
->Figure below is transmission of pressure with range and depth.  
->Ofcourse i split complex pressure in real-part and image-part.So there is two dataset.
->~~Actually,every application has it's PDEs,i think we should care how to make model work...~~
+>*Governing equations is Inhomogeneous Helmholtz equation.*  
+>Dataset:Figure below is transmission of pressure with range and depth.  
+>Ofcourse i split complex pressure in real-part and image-part.So there is two dataset.  
+>~~Actually,every application has it's PDEs,i think we should care how to make model work...~~  
 >yes...i writed a wrong PDE and i change my phan.
 
 <p align="center">
