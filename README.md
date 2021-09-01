@@ -64,11 +64,12 @@ The point in the 49 black boxes is a batch.
 <p align="center">
   <img src="./figures/fig6.png" width="306" height="205">
   <img src="./figures/fig5.png" width="306" height="205">
-</p>
-I no longer want to get the exact solution  
->my dataset is also an approximate solution.  
-so I train vertically distributed networks and perform a stepwise solution for the one-way propagating sound field.
-Here is PINNs results, with *split-stepping method*(or i can't start trainning, LOSS always high): 
+</p>   
+
+I no longer want to get the exact solution, my dataset is also an approximate solution.  
+
+so I train vertically distributed networks and perform a stepwise solution for the one-way propagating sound field.  
+Here is PINNs results, with *split-stepping method*(or i can't start trainning, LOSS always high):  
 <p align="center">
   <img src="./figures/fig5-1.png" width="606" height="205">
 </p>
