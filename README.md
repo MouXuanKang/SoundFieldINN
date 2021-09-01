@@ -37,24 +37,29 @@ $ main.py
 I haven't figured out if this really works, maybe it's no different than increasing the batchsize.
 
 ## Background:  
+This is because not all points have a large amplitude. Since PINN calculates the loss in a batch, perhaps replacing this batch with the Family calculation will give better results.  
 I get real-pressure and image-pressure by other method.And choose Family with size [7,7].  
+The point in the 49 black boxes is a batch.
 >*Governing equations is Inhomogeneous Helmholtz equation.* 
 >Figure below is transmission of pressure with range and depth.  
 >Ofcourse i split complex pressure in real-part and image-part.So there is two dataset.
 >~~Actually,every application has it's PDEs,i think we should care how to make model work...~~
->yes...i writed a wrong PDE and i have change my phan.
+>yes...i writed a wrong PDE and i change my phan.
 
 <p align="center">
   <img src="./figures/fig6.png" width="306" height="205">
   <img src="./figures/fig5.png" width="306" height="205">
 </p>
-
-PINNs results, with *split-stepping method*(or i can't start trainning, LOSS always high): 
+I no longer want to get the exact solution  
+>my dataset is also an approximate solution.  
+so I train vertically distributed networks and perform a stepwise solution for the one-way propagating sound field.
+Here is PINNs results, with *split-stepping method*(or i can't start trainning, LOSS always high): 
 <p align="center">
   <img src="./figures/fig5-1.png" width="606" height="205">
 </p>
 
-Figure right is error-pointwise,seems to be working with split-stepping.But part of near-field place is not work.
+Figure right is error-pointwise,seems to be working with split-stepping.Part of near-field still not work.
+It appears that the lower proximity amplitude results in the network not learning the mechanism, but with low loss.
 
 ## References：
 1. Haghighat E, Bekar A C, Madenci E, et al. A nonlocal physics-informed deep learning framework using the peridynamic differential operator[J]. Computer Methods in Applied Mechanics and Engineering, 2021, 385: 114012.
