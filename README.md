@@ -37,14 +37,18 @@ $ main.py
 ## Current Issues: 
 Acoording Ehsan's reply, i'm rewriting my code...
 To have multiple features (N units for your inputs, equivalent to nonlocal features), you need to slightly adjust your Variable and use the Field interfaces. Check the example below:
->x = sn.Variable('x', units=Nin)
->y = sn.Functional(
->    sn.Field('y', units=Nout), 
->    x, 4*[100], 'tanh')
+```
+x = sn.Variable('x', units=Nin)
+y = sn.Functional(
+    sn.Field('y', units=Nout), 
+    x, 4*[100], 'tanh')
+```
 then check help(sn.Field) to see some documents.
 Then you can apply dot product etc
->w = sn.Variable('w', units=Nout)
->f_nonlocal = sn.dot(y, w)
+```
+w = sn.Variable('w', units=Nout)
+f_nonlocal = sn.dot(y, w)
+```
 where w is pre-evaluated weights 
 
 
