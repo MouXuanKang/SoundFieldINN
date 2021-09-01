@@ -1,6 +1,7 @@
 # Sound field information neural network
-Sound field information predict with PINNs framwork, in this project-test i try to use ~~peridynamic differential operator...~~
-PDDO seems not working,so i retrying split-stepping...
+Sound field information predict with PINNs framwork, in this project i try to use peridynamic differential operator(PDDO)... 
+1. PDDO to include nonlocal feature
+2. Split-stepping in horizontal direction, VP-PINNs in vertical direction
 
 ## Table of Contents
 
@@ -34,7 +35,18 @@ $ main.py
 - [ ] train and test.
 
 ## Current Issues: 
-I haven't figured out if this really works, maybe it's no different than increasing the batchsize.
+Acoording Ehsan's reply, i'm rewriting my code...
+To have multiple features (N units for your inputs, equivalent to nonlocal features), you need to slightly adjust your Variable and use the Field interfaces. Check the example below:
+>x = sn.Variable('x', units=Nin)
+>y = sn.Functional(
+>    sn.Field('y', units=Nout), 
+>    x, 4*[100], 'tanh')
+then check help(sn.Field) to see some documents.
+Then you can apply dot product etc
+>w = sn.Variable('w', units=Nout)
+>f_nonlocal = sn.dot(y, w)
+where w is pre-evaluated weights 
+
 
 ## Background:  
 This is because not all points have a large amplitude. Since PINN calculates the loss in a batch, perhaps replacing this batch with the Family calculation will give better results.  
@@ -43,8 +55,6 @@ The point in the 49 black boxes is a batch.
 >*Governing equations is Inhomogeneous Helmholtz equation.*  
 >Dataset:Figure below is transmission of pressure with range and depth.  
 >Ofcourse i split complex pressure in real-part and image-part.So there is two dataset.  
->~~Actually,every application has it's PDEs,i think we should care how to make model work...~~  
->yes...i writed a wrong PDE and i change my phan.
 
 <p align="center">
   <img src="./figures/fig6.png" width="306" height="205">
