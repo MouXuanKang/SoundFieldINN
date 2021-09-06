@@ -17,7 +17,7 @@ import pickle
 import pathlib
 import time
 import matplotlib.pyplot as plt
-from sciann import Variable, Functional, Data, SciModel, PDE, Parameter
+from sciann import Variable, Functional, Data, SciModel, PDE, Parameter, Field, dot
 import tensorflow.keras.callbacks as callbacks
 
 
@@ -38,9 +38,10 @@ def data_tmp(num=10000, random=True):
     with open('Data/G20.pickle', 'rb') as f:
         Family_Node_G20 = pickle.load(f)
     f.close()
-    with open('Data/FamilyRZ.pickle', 'rb') as f:
+    with open('Data/FamilyRZC.pickle', 'rb') as f:
         Family_Node_R = pickle.load(f)
         Family_Node_Z = pickle.load(f)
+        Family_Node_C = pickle.load(f)
     f.close()
     with open('Data/RePImP.pickle', 'rb') as f:
         Family_Node_Rep = pickle.load(f)
@@ -71,84 +72,90 @@ def data_tmp(num=10000, random=True):
         idx = np.random.choice((nr - 1) * (nz - 1), num, replace=False)
     else:
         idx = np.arange(0, (nr - 1) * (nz - 1))
-    G00_train = []
-    G02_train = []
-    G20_train = []
-    R_train = []
-    Z_train = []
-    Rep_train = []
-    Imp_train = []
+    G00_loop = []
+    G02_loop = []
+    G20_loop = []
+    R_loop = []
+    Z_loop = []
+    C_loop = []
+    Rep_loop = []
+    Imp_loop = []
     for i, val in enumerate(idx):
         idx_r = val % nr
         idx_z = val // nr
-        G00_train.append(Family_Node_G00[idx_z, idx_r, :, :].flatten().astype(np.float64).tolist())
-        G02_train.append(Family_Node_G02[idx_z, idx_r, :, :].flatten().astype(np.float64).tolist())
-        G20_train.append(Family_Node_G20[idx_z, idx_r, :, :].flatten().astype(np.float64).tolist())
-        R_train.append(Family_Node_R[idx_z, idx_r, :, :].flatten().astype(np.float64).tolist())
-        Z_train.append(Family_Node_Z[idx_z, idx_r, :, :].flatten().astype(np.float64).tolist())
-        Rep_train.append(Family_Node_Rep[idx_z, idx_r, :, :].flatten().astype(np.float64).tolist())
-        Imp_train.append(Family_Node_Imp[idx_z, idx_r, :, :].flatten().astype(np.float64).tolist())
+        G00_loop.append(Family_Node_G00[idx_z, idx_r, :, :].flatten())
+        G02_loop.append(Family_Node_G02[idx_z, idx_r, :, :].flatten())
+        G20_loop.append(Family_Node_G20[idx_z, idx_r, :, :].flatten())
+        R_loop.append(Family_Node_R[idx_z, idx_r, :, :].flatten())
+        Z_loop.append(Family_Node_Z[idx_z, idx_r, :, :].flatten())
+        C_loop.append(Family_Node_C[idx_z, idx_r, :, :].flatten())
+        Rep_loop.append(Family_Node_Rep[idx_z, idx_r, :, :].flatten())
+        Imp_loop.append(Family_Node_Imp[idx_z, idx_r, :, :].flatten())
 
-    k_train = k_star.flatten()[idx, None]
+    G00_train = np.array(G00_loop)
+    G20_train = np.array(G20_loop)
+    G02_train = np.array(G02_loop)
+    R_train = np.array(R_loop)
+    Z_train = np.array(Z_loop)
+    C_train = np.array(C_loop)
+    Rep_train = np.array(Rep_loop)
+    Imp_train = np.array(Imp_loop)
+    # k_train = k_star.flatten()[idx, None]
     rho_train = Rho_star.flatten()[idx, None]
     Rep_target = Re_P_star.flatten()[idx, None]
     Imp_target = Im_P_star.flatten()[idx, None]
-    return k_train, rho_train, Rep_target, Imp_target, G00_train, G02_train, G20_train, \
+
+    return C_train, rho_train, Rep_target, Imp_target, G00_train, G02_train, G20_train, \
            R_train, Z_train, Rep_train, Imp_train, horizont
 
 
 if __name__ == "__main__":
     # prepare data
-    k_train, rho_train, Re_p_target, Im_p_target, G00_train, G02_train, G20_train, r_train, z_train, \
+    c_train, rho_train, Re_p_target, Im_p_target, G00_train, G02_train, G20_train, r_train, z_train, \
     Re_p_train, Im_p_train, horizont = data_tmp()
 
     # flag
     # IsTrain = False
     IsTrain = True
-    k0_train = 150.0 * 3.1415926 / 1500.0
-    # Variables and Fields
-    r = Variable("r", units=horizont, dtype='float64')
-    z = Variable("z", units=horizont, dtype='float64')
-    k = Variable("k", units=horizont, dtype='float64')
-    G00 = Variable("G00", units=horizont, dtype='float64')
-    G02 = Variable("G02", units=horizont, dtype='float64')
-    G20 = Variable("G20", units=horizont, dtype='float64')
-    layers = 4 * [49]
-    p_real = Functional("p_real", [r, z, k], layers, 'tanh')
-    p_imag = Functional("p_imag", [r, z, k], layers, 'tanh')
 
-    # Define constrains
+    # Variables and Fields
+    r = Variable("r", units=horizont)
+    z = Variable("z", units=horizont)
+    c = Variable("c", units=horizont)
+    G00 = Variable("G00", units=49)
+    G02 = Variable("G02", units=49)
+    G20 = Variable("G20", units=49)
+    # p_real = Variable("p_real", units=horizont, dtype='float64')
+    # p_imag = Variable("p_imag", units=horizont, dtype='float64')
+    omega = 150.0*3.1415926
+
+    layers = 4*[50]
+    p_real = Functional(Field("p_real", units=49), [r, z, c], layers, 'tanh')
+    p_imag = Functional(Field("p_imag", units=49), [r, z, c], layers, 'tanh')
+
+    # Define data constrains
     d1 = Data(p_real)
     d2 = Data(p_imag)
-    d3 = Data(k)
-    d4 = Data(G00)
-    d5 = Data(G02)
-    d6 = Data(G20)
-    # d4 = Data(k0)
-    c1 = PDE(k ** 2 * tf.reduce_sum(tf.matmul(G00, p_real), axis=1) +
-             tf.reduce_sum(tf.matmul(G20, p_real), axis=1) +
-             tf.reduce_sum(tf.matmul(G02, p_real)), axis=1)
-    c2 = PDE(k ** 2 * tf.reduce_sum(tf.matmul(G00, p_imag), axis=1) +
-             tf.reduce_sum(tf.matmul(G20, p_imag), axis=1) +
-             tf.reduce_sum(tf.matmul(G02, p_imag)), axis=1)
+    c1 = PDE((omega / c)**2*dot(G00, p_real)
+             + dot(G20, p_real)
+             + dot(G02, p_real))
+    c2 = PDE((omega / c)**2*dot(G00, p_imag)
+             + dot(G20, p_imag)
+             + dot(G02, p_imag))
 
     # data rename
     data_d1 = Re_p_train
     data_d2 = Im_p_train
-    data_d3 = k_train
-    data_d4 = G00_train
-    data_d5 = G20_train
-    data_d6 = G02_train
-    # data_d4 = k0_train
+
     data_c1 = 'zeros'
     data_c2 = 'zeros'
     # constraints rename
-    input_ = [r, z, k, G00, G02, G20]
-    input_data = [r_train, z_train, k_train, G00_train, G02_train, G20_train]
-    cons_ = [d1, d2, d3, d4, d5, d6, c1, c2]
-    cons_data = [data_d1, data_d2, data_d3, data_d4, data_d5, data_d6, data_c1, data_c2]
+    input = [r, z, c, G00, G02, G20]
+    input_data = [r_train, z_train, c_train, G00_train, G02_train, G20_train]
+    cons = [d1, d2, c1, c2]
+    cons_data = [data_d1, data_d2, data_c1, data_c2]
 
-    model = SciModel(input_, cons_)
+    model = SciModel(input, cons)
 
     # callbacks
     current_file_path = pathlib.Path(__file__).parents[0]
@@ -166,8 +173,8 @@ if __name__ == "__main__":
         history = model.train(
             input_data,
             cons_data,
-            epochs=1e3,
-            batch_size=49,
+            epochs=1000,
+            batch_size=50,
             adaptive_weights={"method": "NTK", "freq": 100},
             shuffle=True,
             learning_rate=1e-4,

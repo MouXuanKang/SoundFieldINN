@@ -19,7 +19,7 @@ import scipy.io
 import matplotlib.gridspec as gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import product, combinations
-from helmholtz_test.sciann_datagenerator import DataGeneratorXYT
+from sciann_datagenerator import DataGeneratorXYT
 import pickle
 import tqdm
 from time import sleep
@@ -194,10 +194,10 @@ if __name__ == "__main__":
     # plt.figure(1)
     # plt.imshow(TL.T)  # 199x200
     # plt.show()
-    ru = 0.1
-    rd = 9.0
-    zu = 1.0
-    zd = 380.0
+    ru = 1.1
+    rd = 2.0
+    zu = 30.0
+    zd = 60.0
 
     box_lb = np.array([ru, zu])
     box_ub = np.array([rd, zd])
@@ -363,6 +363,10 @@ if __name__ == "__main__":
                                    len(R_star),
                                    Family_size[0] + Family_size[1] + 1,
                                    Family_size[2] + Family_size[3] + 1], dtype=float, order='C')
+    Family_Node_C_save = np.ones([len(Z_star),
+                                  len(R_star),
+                                  Family_size[0] + Family_size[1] + 1,
+                                  Family_size[2] + Family_size[3] + 1], dtype=float, order='C') * 1500.0
     Family_Node_RP_save = np.empty([len(Z_star),
                                     len(R_star),
                                     Family_size[0] + Family_size[1] + 1,
@@ -392,6 +396,27 @@ if __name__ == "__main__":
                                      Family_size[0] + Family_size[1] + 1,
                                      Family_size[2] + Family_size[3] + 1], dtype=float, order='C')
 
+    # output2mat
+    # Rho_star = Rho_data[int(ru/dr):int(rd/dr)+1, int(zu/dz):int(zd/dz)+1]  # R x Z
+    print('.mat注入ing...（￣︶￣）')
+    c_star = SSP_data.T[:, :]
+    CC = c_star[1:-1, :]
+    rho_star = Rho_data.T[:, :]
+    omega_star = omega.T[:, :]
+    scipy.io.savemat('Data/cylinder_pre_c0_w0.mat', {
+        'ReP_star': Re_P_star,
+        'ImP_star': Im_P_star,
+        'c_star': c_star,
+        'rho_star': rho_star,
+        'Family_list': FamilyList,
+        'Family_size': Family_size,
+        'R': R_star,
+        'Z': Z_star,
+        'omega_star': omega_star[0][0],
+        'c0': 1500.0,
+        'Versions': 'ramgeo1.5'
+    })
+
     print('循环计算周边动力学系数ing...〒▽〒')
 
     for i in tqdm.tqdm(range(totnodes)):
@@ -413,6 +438,8 @@ if __name__ == "__main__":
                            ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
         Family_Node_z = ZZ[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1,
                            ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
+        Family_Node_C = CC[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1,
+                               ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
         family_nr_flatten = Family_Node_r.flatten()
         family_nz_flatten = Family_Node_z.flatten()
         index_target = \
@@ -423,6 +450,7 @@ if __name__ == "__main__":
         family_nz_sum = np.delete(family_nz_flatten, index_target[0]) - iz * dz - dz
         Family_Node_R_save[iz, ir, y_left:y_right, x_left:x_right] = Family_Node_r
         Family_Node_Z_save[iz, ir, y_left:y_right, x_left:x_right] = Family_Node_z
+        Family_Node_C_save[iz, ir, y_left:y_right, x_left:x_right] = Family_Node_C
         family_node = np.vstack((family_nz_sum, family_nr_sum))
         A_family_node_mat = FormDiffA_mat2D(family_nr_sum, family_nz_sum, [dr, dz])
         b_family_node_vec = FormDiffB_vec2D()
@@ -469,9 +497,10 @@ if __name__ == "__main__":
         pickle.dump(Family_Node_RP_save, f6)
         pickle.dump(Family_Node_IP_save, f6)
     f6.close()
-    with open('Data/FamilyRZ.pickle', 'wb') as f7:
+    with open('Data/FamilyRZC.pickle', 'wb') as f7:
         pickle.dump(Family_Node_R_save, f7)
         pickle.dump(Family_Node_Z_save, f7)
+        pickle.dump(Family_Node_C_save, f7)
     f7.close()
     sleep(0.5)
 
@@ -479,23 +508,4 @@ if __name__ == "__main__":
     # f1 = open('G5.pickle', 'rb')
     # G = pickle.load(f1)  # will change in loop
 
-    # output2mat
-    # Rho_star = Rho_data[int(ru/dr):int(rd/dr)+1, int(zu/dz):int(zd/dz)+1]  # R x Z
-    print('.mat注入ing...（￣︶￣）')
-    c_star = SSP_data.T[:, :]
-    rho_star = Rho_data.T[:, :]
-    omega_star = omega.T[:, :]
-    scipy.io.savemat('Data/cylinder_pre_c0_w0.mat', {
-        'ReP_star': Re_P_star,
-        'ImP_star': Im_P_star,
-        'c_star': c_star,
-        'rho_star': rho_star,
-        'Family_list': FamilyList,
-        'Family_size': Family_size,
-        'R': R_star,
-        'Z': Z_star,
-        'omega_star': omega_star[0][0],
-        'c0': 1500.0,
-        'Versions': 'ramgeo1.5'
-    })
     print('完结撒花！（ ＞﹏＜）')
