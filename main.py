@@ -17,8 +17,10 @@ import pickle
 import pathlib
 import time
 import matplotlib.pyplot as plt
-from sciann import Variable, Functional, Data, SciModel, PDE, Parameter, Field, dot
+from sciann import Variable, Functional, Data, SciModel, PDE, Field, dot
 import tensorflow.keras.callbacks as callbacks
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import tqdm
 
 
 def data_tmp(num=10000, random=True):
@@ -122,31 +124,26 @@ if __name__ == "__main__":
     r = Variable("r", units=horizont)
     z = Variable("z", units=horizont)
     c = Variable("c", units=horizont)
-    G00 = Variable("G00", units=49)
-    G02 = Variable("G02", units=49)
-    G20 = Variable("G20", units=49)
+    G00 = Variable("G00", units=horizont)
+    G02 = Variable("G02", units=horizont)
+    G20 = Variable("G20", units=horizont)
     # p_real = Variable("p_real", units=horizont, dtype='float64')
     # p_imag = Variable("p_imag", units=horizont, dtype='float64')
     omega = 150.0*3.1415926
 
     layers = 4*[50]
-    p_real = Functional(Field("p_real", units=49), [r, z, c], layers, 'tanh')
-    p_imag = Functional(Field("p_imag", units=49), [r, z, c], layers, 'tanh')
+    p_real = Functional(Field("p_real", units=horizont), [r, z, c], layers, 'tanh')
+    p_imag = Functional(Field("p_imag", units=horizont), [r, z, c], layers, 'tanh')
 
     # Define data constrains
     d1 = Data(p_real)
     d2 = Data(p_imag)
-    c1 = PDE((omega / c)**2*dot(G00, p_real)
-             + dot(G20, p_real)
-             + dot(G02, p_real))
-    c2 = PDE((omega / c)**2*dot(G00, p_imag)
-             + dot(G20, p_imag)
-             + dot(G02, p_imag))
+    c1 = PDE((omega / c)**2*dot(G00, p_real) + dot(G20, p_real) + dot(G02, p_real))
+    c2 = PDE((omega / c)**2*dot(G00, p_imag) + dot(G20, p_imag) + dot(G02, p_imag))
 
     # data rename
     data_d1 = Re_p_train
     data_d2 = Im_p_train
-
     data_c1 = 'zeros'
     data_c2 = 'zeros'
     # constraints rename
@@ -155,12 +152,11 @@ if __name__ == "__main__":
     cons = [d1, d2, c1, c2]
     cons_data = [data_d1, data_d2, data_c1, data_c2]
 
-    model = SciModel(input, cons)
-
+    model = SciModel(input, cons, optimizer='scipy-l-bfgs-b')
     # callbacks
     current_file_path = pathlib.Path(__file__).parents[0]
-    checkpoint_filepath = str(current_file_path.joinpath('callbacks/pddo.ckpt'))
-    save_path = str(current_file_path.joinpath('callbacks/PDDO/Helmholtz2D.hdf5'))
+    checkpoint_filepath = str(current_file_path.joinpath('callbacks/PDDO/test.ckpt'))
+    save_path = str(current_file_path.joinpath('model/Helmholtz2D.hdf5'))
     model_checkpoint_callback = callbacks.ModelCheckpoint(
         filepath=checkpoint_filepath,
         save_weights_only=True,
@@ -174,7 +170,7 @@ if __name__ == "__main__":
             input_data,
             cons_data,
             epochs=1000,
-            batch_size=50,
+            batch_size=100,
             adaptive_weights={"method": "NTK", "freq": 100},
             shuffle=True,
             learning_rate=1e-4,
@@ -192,3 +188,55 @@ if __name__ == "__main__":
     else:
         # load the best performing model
         model.load_weights(save_path)
+
+    # test
+    c_eval, rho_eval, Re_p_target_eval, Im_p_target_eval, G00_eval, G02_eval, G20_eval, r_eval, z_eval, \
+    Re_p_eval, Im_p_eval, horizont = data_tmp(random=False)
+    # load .mat
+    data = loadmat('Data/cylinder_pre_c0_w0.mat')
+    R = data['R']  # R x 1
+    Z = data['Z']  # Z x 1
+    dr = 50
+    dz = 5
+    r_grid, z_grid = np.meshgrid(R[:, 0:-1], Z[:, 0:-1])
+    # shape
+    lr = R.shape[1]
+    lz = Z.shape[1]
+    tl_eval = np.sqrt(Re_p_target_eval ** 2 + Im_p_target_eval ** 2).reshape(lz-1, lr-1)
+
+    eval_input = [r_eval, z_eval, c_eval, G00_eval, G02_eval, G20_eval]
+    p_real_pred = np.sum(p_real.eval(model, eval_input)*G00_eval, axis=1)
+    p_imag_pred = np.sum(p_imag.eval(model, eval_input)*G00_eval, axis=1)
+    tl_pred = np.sqrt(p_real_pred ** 2 + p_imag_pred ** 2).reshape(lz-1, -1)
+
+    fig = plt.figure(2, figsize=(10, 8))
+    ax = plt.subplot(2, 2, 1)
+    ax.invert_yaxis()
+    h0 = ax.pcolormesh(r_grid / 1e3, z_grid, tl_eval, cmap='jet', shading='nearest')
+    ax.set_title('exact')
+    ax.set_xlabel('$range, km$')
+    ax.set_ylabel('$depth, m$')
+
+    ax = plt.subplot(2, 2, 2)
+    ax.invert_yaxis()
+    # h10 = ax.plot(xx, tl_exsol, 'k', linewidth=1.5, label='exact')
+    # h11 = ax.plot(xx, tl_pred, 'r-.', linewidth=1.5, label='predict')
+    h1 = ax.pcolormesh(r_grid / 1e3, z_grid, tl_pred, cmap='jet', shading='nearest')
+    ax.set_title('predict')
+    ax.set_xlabel('$range, km$')
+    ax.set_ylabel('$depth, m$')
+    # plt.legend()
+
+    ax = plt.subplot(2, 1, 2)
+    ax.invert_yaxis()
+    h2 = ax.pcolormesh(r_grid / 1e3, z_grid, abs(tl_pred - tl_eval), cmap='jet', shading='nearest')
+    ax.set_xlabel('$range, km$')
+    ax.set_ylabel('$depth, m$')
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    fig.colorbar(h0, cax=cax)
+    ax.set_title('point-wist')
+    plt.tight_layout()
+    plt.savefig('./figures/fig5-2.png')
+
+    plt.show()

@@ -343,7 +343,7 @@ if __name__ == "__main__":
         return family_list
 
 
-    Family_size = [3, 3, 3, 3]
+    Family_size = [5, 5, 5, 5]
 
     # dist:|[x1, x2, y1, y2]|, edge:[dr, r, dz, z],
     # x + x1 < r, x - x2 > 0, y + y1 < z, y - y2 > 0
@@ -439,7 +439,7 @@ if __name__ == "__main__":
         Family_Node_z = ZZ[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1,
                            ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
         Family_Node_C = CC[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1,
-                               ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
+                           ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
         family_nr_flatten = Family_Node_r.flatten()
         family_nz_flatten = Family_Node_z.flatten()
         index_target = \
