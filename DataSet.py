@@ -23,21 +23,6 @@ from sciann_datagenerator import DataGeneratorXYT
 import pickle
 import tqdm
 from time import sleep
-import logging
-
-
-# 程序日志输出设置
-logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
-formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-handler = logging.FileHandler("log.txt")
-handler.setLevel(logging.INFO)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-# console = logging.StreamHandler()
-# console.setLevel(logging.INFO)
-# console.setFormatter(formatter)
-# logger.addHandler(console)
 
 
 def axisEqual3D(axx, nn):
@@ -314,36 +299,20 @@ if __name__ == "__main__":
             y2 = coord_y[i1] - dist[3] * d_z
             if x1 > edge[1]:
                 family_list[i1][0] = (edge[1] - coord_x[i1]) // d_r
-                if i1 == test:
-                    logger.debug('x1=', coord_x[i1], '+', dist[0] * d_r, '=', x1, 'AND',
-                                 x1, '>', edge[1], 'So, change FamilyList[0] to', family_list[i1][0])
-                    logger.debug('After change,coord_x[i] + Family_list[i] is ',
-                                 coord_x[i1] + family_list[i1][0] * d_r, '=', 'edge[1]:', edge[1])
+
             if x2 < edge[0]:
                 family_list[i1][1] = coord_x[i1] // d_r
-                if i1 == test:
-                    logger.debug('x2=', coord_x[i1], '-', dist[1] * d_r, '=', x2, 'AND',
-                                 x2, '<', edge[0], 'So, change FamilyList[1] to', family_list[i1][1])
-                    logger.debug('After change,coord_x[i] - Family_list[i] is ',
-                                 coord_x[i1] - family_list[i1][1] * d_r, '=', 'edge[0]:', edge[0])
+
             if y1 > edge[3]:
                 family_list[i1][2] = (edge[3] - coord_y[i1]) // d_z
-                if i1 == test:
-                    logger.debug('y1=', coord_y[i1], '+', dist[3] * d_z, '=', y1, 'AND',
-                                 y1, '>', edge[3], 'So, change FamilyList[2] to', family_list[i1][2])
-                    logger.debug('After change,coord_y[i] + Family_list[i] is ',
-                                 coord_y[i1] + family_list[i1][2] * d_z, '=', 'edge[3]:', edge[3])
+
             if y2 < edge[2]:
                 family_list[i1][3] = coord_y[i1] // d_z
-                if i1 == test:
-                    logger.debug('y2=', coord_y[i1], '-', dist[2] * d_z, '=', y2, 'AND',
-                                 y2, '<', edge[2], 'So, change FamilyList[3] to', family_list[i1][3])
-                    logger.debug('After change,coord_y[i] - Family_list[i] is ',
-                                 coord_y[i1] - family_list[i1][3] * d_z, '=', 'edge[2]:', edge[2])
+
         return family_list
 
 
-    Family_size = [5, 5, 5, 5]
+    Family_size = [3, 3, 3, 3]
 
     # dist:|[x1, x2, y1, y2]|, edge:[dr, r, dz, z],
     # x + x1 < r, x - x2 > 0, y + y1 < z, y - y2 > 0
@@ -422,11 +391,11 @@ if __name__ == "__main__":
     for i in tqdm.tqdm(range(totnodes)):
         # for i in [0]:
         Node_Number = FamilyList[i]
-        # coord of target:(iz, ir), nr == len(R_star)
+        # coord of target:(iz, ir), totnodes = len(R_star) * len(Z_star)
         # print(i, (z_list[i - 1], r_list[i - 1]))
-        ir = i % len(R_star)  #
         iz = i // len(R_star)  #
-        # -3 2 -3 1, 3333
+        ir = i % len(R_star)  #
+        # x_left = Family_size[0] - Node_Number[0] = 0
         x_left = -Node_Number[0] + Family_size[0]
         x_right = Node_Number[1] + Family_size[1]
         y_left = -Node_Number[2] + Family_size[2]
@@ -459,20 +428,31 @@ if __name__ == "__main__":
                                                    A_family_node_mat, b_family_node_vec)
         G_loop = np.vstack((G00, G10, G01, G20, G02))
 
-        G00_shape = np.insert(G00.T, index_target, 0).reshape(y_size, x_size)
-        G10_shape = np.insert(G10.T, index_target, 0).reshape(y_size, x_size)
-        G01_shape = np.insert(G01.T, index_target, 0).reshape(y_size, x_size)
-        G20_shape = np.insert(G20.T, index_target, 0).reshape(y_size, x_size)
-        G02_shape = np.insert(G02.T, index_target, 0).reshape(y_size, x_size)
+        G00_shape = np.insert(G00.T, 0, 0).reshape(y_size, x_size)
+        G10_shape = np.insert(G10.T, 0, 0).reshape(y_size, x_size)
+        G01_shape = np.insert(G01.T, 0, 0).reshape(y_size, x_size)
+        G20_shape = np.insert(G20.T, 0, 0).reshape(y_size, x_size)
+        G02_shape = np.insert(G02.T, 0, 0).reshape(y_size, x_size)
         Family_Node_G00_save[iz, ir, y_left:y_right, x_left:x_right] = G00_shape
         Family_Node_G10_save[iz, ir, y_left:y_right, x_left:x_right] = G10_shape
         Family_Node_G01_save[iz, ir, y_left:y_right, x_left:x_right] = G01_shape
         Family_Node_G20_save[iz, ir, y_left:y_right, x_left:x_right] = G20_shape
         Family_Node_G02_save[iz, ir, y_left:y_right, x_left:x_right] = G02_shape
-        Family_Node_RP_save[iz, ir, y_left:y_right, x_left:x_right] = \
-            Re_P_data[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1, ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
-        Family_Node_IP_save[iz, ir, y_left:y_right, x_left:x_right] = \
-            Im_P_data[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1, ir - Node_Number[1] + 1:ir + Node_Number[0] + 1]
+
+        temp_rep = Re_P_data[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1,
+                             ir - Node_Number[1] + 1:ir + Node_Number[0] + 1].flatten()
+        temp_imp = Im_P_data[iz - Node_Number[3] + 1:iz + Node_Number[2] + 1,
+                             ir - Node_Number[1] + 1:ir + Node_Number[0] + 1].flatten()
+        temp_rep_target = temp_rep[index_target[0]]
+        temp_imp_target = temp_imp[index_target[0]]
+        temp_re = np.delete(temp_rep, index_target[0])
+        temp_im = np.delete(temp_imp, index_target[0])
+        temp_rep = np.hstack((temp_rep_target, temp_re))
+        temp_imp = np.hstack((temp_imp_target, temp_im))
+
+        Family_Node_RP_save[iz, ir, y_left:y_right, x_left:x_right] = temp_rep.reshape(y_size, x_size)
+        Family_Node_IP_save[iz, ir, y_left:y_right, x_left:x_right] = temp_imp.reshape(y_size, x_size)
+
         # name = 'G' + str(i)       # 功能，随循环生成变量名保存变量到.pickle
         # locals()[name] = G_loop   # 弃用，原因：主函数中调用不方便，变量名过多
         # pickle.dump(locals()[name], f)
