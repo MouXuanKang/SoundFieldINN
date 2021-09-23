@@ -62,8 +62,7 @@ The point in the 49 black boxes is a batch.
 >Ofcourse i split complex pressure in real-part and image-part.So there is two dataset.  
 
 <p align="center">
-  <img src="./figures/fig6.png" width="306" height="205">
-  <img src="./figures/fig5.png" width="306" height="205">
+  <img src="./figures/fig5-1.png" width="650" height="285">
 </p>   
 
 I no longer want to get the exact solution, my dataset is also an approximate solution.  
@@ -71,7 +70,7 @@ I no longer want to get the exact solution, my dataset is also an approximate so
 so I train vertically distributed networks and perform a stepwise solution for the one-way propagating sound field.  
 Here is PINNs results, with *split-stepping method*(or i can't start trainning, LOSS always high):  
 <p align="center">
-  <img src="./figures/fig5-1.png" width="606" height="205">
+  <img src="./figures/fig5-2.png" width="380" height="250">
 </p>
 
 Figure right is error-pointwise,seems to be working with split-stepping.Part of near-field still not work.
