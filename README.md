@@ -1,7 +1,8 @@
 # Sound field information neural network
-Sound field information predict with PINNs framwork, in this project i try to use peridynamic differential operator(PDDO)... 
-1. PDDO to include nonlocal feature
-2. Split-stepping in horizontal direction, VP-PINNs in vertical direction
+Sound field information predict with PINNs framwork
+~~1. PDDO to include nonlocal feature~~ 
+2. Split-stepping in horizontal direction, with parabolic equation code "RAM" as data-source
+3. I dim that RAM is not a goog start because it's too difficult set the boundary...so i choose "KRAKEN"! 
 
 ## Table of Contents
 
@@ -19,39 +20,15 @@ I'll put the questions I feel stuck on me in "Current-Issues" and welcome your a
 I explain my project simplely in "Background".  
 
 ## Usage:
+I rewrite my code in .ipynb, may be let it looks good.
 
-Dataset: run Dataset.py to get .pickle and .mat
-```
-$ DataSet.py
-```
-
-My model:
-```
-$ main.py
-```
 ## Features:
-- [x] Create dataset, include complete pressure.
-- [ ] Load dataset, random sample dataset.Create Model. 
-- [ ] train and test.
+- [x] PDDO-PINN
+- [x] PINN with slit-step data, “RAM” as data-source
+- [ ] PINN, "kraken" as data-source
 
 ## Current Issues: 
-Acoording Ehsan's reply, i'm rewriting my code...  
-To have multiple features (N units for your inputs, equivalent to nonlocal features), you need to slightly adjust your Variable and use the Field interfaces.  
-Check the example below:
-```
-x = sn.Variable('x', units=Nin)
-y = sn.Functional(
-    sn.Field('y', units=Nout), 
-    x, 4*[100], 'tanh')
-```
-then check help(sn.Field) to see some documents.  
-Then you can apply dot product etc:
-```
-w = sn.Variable('w', units=Nout)
-f_nonlocal = sn.dot(y, w)
-```
-where w is pre-evaluated weights 
-
+I found there need two NN to set up a correct model, it's diffcult and i choose change my data-source to "KRAKEN"
 
 ## Background:  
 This is because not all points have a large amplitude. Since PINN calculates the loss in a batch, perhaps replacing this batch with the Family calculation will give better results.  
